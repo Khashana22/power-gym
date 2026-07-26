@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MembersModule } from './members/members.module';
 import { AuthModule } from './auth/auth.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { MembershipPlansModule } from './membership-plans/membership-plans.modul
     MembersModule,
     AuthModule,
     MembershipPlansModule,
+    SubscriptionsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
