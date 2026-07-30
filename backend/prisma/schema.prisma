@@ -31,13 +31,39 @@ enum NotificationType {
   EXPIRY_REMINDER
   EXPIRED
   RENEWED
+  PAYMENT_SUCCESS
+  MEMBERSHIP_CARD
+  BIRTHDAY
+  ABSENCE_7
+  ABSENCE_30
+  ATTENDANCE_CONFIRM
+  FREEZE
+  UNFREEZE
+  CUSTOM
 }
 
 enum NotificationStatus {
   PENDING
   SENT
   FAILED
+  RETRYING
 }
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ARCHIVE
+  RESTORE
+  FREEZE
+  UNFREEZE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+}
+
+// ─── Gym ────────────────────────────────────────────────────────────────────
 
 model Gym {
   id        String   @id @default(cuid())
@@ -50,7 +76,47 @@ model Gym {
   members   Member[]
   plans     MembershipPlan[]
   expenses  Expense[]
+  settings  GymSettings?
+  auditLogs AuditLog[]
 }
+
+// ─── GymSettings ────────────────────────────────────────────────────────────
+
+model GymSettings {
+  id               String   @id @default(cuid())
+  gymId            String   @unique
+  gym              Gym      @relation(fields: [gymId], references: [id])
+
+  gymName          String?
+  phone            String?
+  address          String?
+  logo             String?
+  primaryColor     String   @default("#F97316")
+  secondaryColor   String   @default("#09090B")
+  currency         String   @default("EGP")
+  timezone         String   @default("Africa/Cairo")
+  businessHours    String?  // JSON string e.g. {"open":"06:00","close":"22:00"}
+
+  // WhatsApp
+  whatsappToken    String?
+  whatsappPhoneId  String?
+  whatsappEnabled  Boolean  @default(false)
+
+  // SMTP
+  smtpHost         String?
+  smtpPort         Int?
+  smtpUser         String?
+  smtpPassword     String?
+  smtpFrom         String?
+  smtpEnabled      Boolean  @default(false)
+
+  // Payment methods enabled
+  paymentMethods   String   @default("CASH,VISA,INSTAPAY,VODAFONE_CASH")
+
+  updatedAt        DateTime @updatedAt
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
 
 model User {
   id        String   @id @default(cuid())
@@ -63,17 +129,26 @@ model User {
   gym       Gym      @relation(fields: [gymId], references: [id])
 
   createdAt DateTime @default(now())
+
+  auditLogs AuditLog[]
 }
+
+// ─── Member ──────────────────────────────────────────────────────────────────
 
 model Member {
   id           String   @id @default(cuid())
-  memberCode   String   @unique   // PG-2026-000001
+  memberCode   String   @unique
   fullName     String
   phone        String   @unique
   email        String?
   photo        String?
+  birthday     DateTime?
   qrToken      String   @unique
   isActive     Boolean  @default(true)
+  isArchived   Boolean  @default(false)
+  archiveReason String?
+  archivedAt   DateTime?
+  notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -83,16 +158,23 @@ model Member {
   subscriptions Subscription[]
   attendance    Attendance[]
   notifications Notification[]
+  freezes       MemberFreeze[]
 
   @@index([fullName])
   @@index([phone])
+  @@index([memberCode])
+  @@index([gymId, isActive])
+  @@index([gymId, isArchived])
 }
+
+// ─── MembershipPlan ──────────────────────────────────────────────────────────
 
 model MembershipPlan {
   id            String   @id @default(cuid())
   name          String
   durationDays  Int
   price         Float
+  description   String?
   isActive      Boolean  @default(true)
 
   gymId         String
@@ -101,11 +183,17 @@ model MembershipPlan {
   subscriptions Subscription[]
 }
 
+// ─── Subscription ────────────────────────────────────────────────────────────
+
 model Subscription {
   id          String              @id @default(cuid())
   startDate   DateTime
   endDate     DateTime
   status      SubscriptionStatus  @default(ACTIVE)
+
+  // Freeze support
+  frozenAt    DateTime?
+  frozenDays  Int                 @default(0)
 
   memberId    String
   member      Member              @relation(fields: [memberId], references: [id])
@@ -114,21 +202,32 @@ model Subscription {
   plan        MembershipPlan      @relation(fields: [planId], references: [id])
 
   payments    Payment[]
+  freezes     MemberFreeze[]
 
   createdAt   DateTime            @default(now())
 
   @@index([endDate])
+  @@index([memberId])
+  @@index([status])
 }
+
+// ─── Payment ─────────────────────────────────────────────────────────────────
 
 model Payment {
   id             String        @id @default(cuid())
   amount         Float
   method         PaymentMethod
   paidAt         DateTime      @default(now())
+  notes          String?
 
   subscriptionId String
   subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@index([paidAt])
 }
+
+// ─── Attendance ──────────────────────────────────────────────────────────────
 
 model Attendance {
   id        String   @id @default(cuid())
@@ -138,27 +237,83 @@ model Attendance {
   member    Member   @relation(fields: [memberId], references: [id])
 
   @@index([checkIn])
+  @@index([memberId])
 }
+
+// ─── Notification ────────────────────────────────────────────────────────────
 
 model Notification {
-  id        String              @id @default(cuid())
-  type      NotificationType
-  message   String
-  status    NotificationStatus  @default(PENDING)
-  sentAt    DateTime?
-  createdAt DateTime            @default(now())
+  id         String              @id @default(cuid())
+  type       NotificationType
+  message    String
+  status     NotificationStatus  @default(PENDING)
+  retryCount Int                 @default(0)
+  maxRetries Int                 @default(3)
+  sentAt     DateTime?
+  scheduledAt DateTime?
+  errorMsg   String?
+  createdAt  DateTime            @default(now())
 
-  memberId  String
-  member    Member              @relation(fields: [memberId], references: [id])
+  memberId   String
+  member     Member              @relation(fields: [memberId], references: [id])
+
+  @@index([status])
+  @@index([memberId])
+  @@index([createdAt])
 }
+
+// ─── MemberFreeze ────────────────────────────────────────────────────────────
+
+model MemberFreeze {
+  id             String       @id @default(cuid())
+  memberId       String
+  member         Member       @relation(fields: [memberId], references: [id])
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  reason         String?
+  frozenAt       DateTime     @default(now())
+  resumedAt      DateTime?
+  daysFrozen     Int?
+
+  @@index([memberId])
+}
+
+// ─── Expense ─────────────────────────────────────────────────────────────────
 
 model Expense {
   id        String   @id @default(cuid())
   title     String
   category  String
   amount    Float
+  notes     String?
   createdAt DateTime @default(now())
 
   gymId     String
   gym       Gym      @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, createdAt])
+}
+
+// ─── AuditLog ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  entity    String
+  entityId  String?
+  summary   String?
+  oldValue  Json?
+  newValue  Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  gymId     String
+  gym       Gym         @relation(fields: [gymId], references: [id])
+
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+
+  @@index([gymId, createdAt])
+  @@index([entity, entityId])
 }
