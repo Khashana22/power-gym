@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, Badge, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../../components/ui';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { DashboardShell } from '../../components/dashboard-shell';
-import { useToast } from '../../components/ui/toast';
+import { Card, CardContent, Badge, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../components/ui';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { DashboardShell } from '../components/dashboard-shell';
+import { useToast } from '../components/ui/toast';
 import { Plus, Edit, Trash2, Package, Clock, DollarSign } from 'lucide-react';
-import api from '../../lib';
+import api from '../lib';
 
 interface Plan {
   id: string;
