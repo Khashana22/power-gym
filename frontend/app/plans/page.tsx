@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardContent, Badge, Spinner, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../components/ui';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { DashboardShell } from '../components/dashboard-shell';
-import { useToast } from '../components/ui/toast';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import api from '../lib';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, Badge, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../../components/ui';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { DashboardShell } from '../../components/dashboard-shell';
+import { useToast } from '../../components/ui/toast';
+import { Plus, Edit, Trash2, Package, Clock, DollarSign } from 'lucide-react';
+import api from '../../lib';
 
 interface Plan {
   id: string;
@@ -17,22 +17,32 @@ interface Plan {
   isActive: boolean;
 }
 
+function fmt(n: number) {
+  return 'EGP ' + new Intl.NumberFormat('en-EG').format(n);
+}
+
+function formatDuration(days: number) {
+  if (days === 365) return '1 year';
+  if (days % 30 === 0) { const m = days / 30; return `${m} month${m > 1 ? 's' : ''}`; }
+  if (days % 7 === 0) { const w = days / 7; return `${w} week${w > 1 ? 's' : ''}`; }
+  return `${days} days`;
+}
+
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  
   const [formData, setFormData] = useState({ name: '', durationDays: 30, price: 0 });
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { showToast } = useToast();
 
-  const { toast } = useToast();
-
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await api.get<Plan[]>('/membership-plans');
       setPlans(data);
@@ -41,21 +51,11 @@ export default function PlansPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchPlans();
   }, []);
 
-  const formatDuration = (days: number) => {
-    if (days % 30 === 0) {
-      const months = days / 30;
-      return `${months} month${months > 1 ? 's' : ''}`;
-    }
-    return `${days} day${days > 1 ? 's' : ''}`;
-  };
+  useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
-  const handleOpenModal = (plan?: Plan) => {
+  const openModal = (plan?: Plan) => {
     if (plan) {
       setSelectedPlan(plan);
       setFormData({ name: plan.name, durationDays: plan.durationDays, price: plan.price });
@@ -67,129 +67,164 @@ export default function PlansPage() {
   };
 
   const handleSave = async () => {
+    if (!formData.name.trim()) { showToast({ title: 'Plan name is required', type: 'warning' }); return; }
+    if (formData.durationDays < 1) { showToast({ title: 'Duration must be at least 1 day', type: 'warning' }); return; }
+    if (formData.price < 0) { showToast({ title: 'Price cannot be negative', type: 'warning' }); return; }
+
     setIsSaving(true);
     try {
       if (selectedPlan) {
-        await api.patch(`/membership-plans/${selectedPlan.id}`, formData);
-        toast({ title: 'Success', description: 'Plan updated successfully' });
+        const updated = await api.patch<Plan>(`/membership-plans/${selectedPlan.id}`, formData);
+        setPlans(ps => ps.map(p => p.id === updated.id ? updated : p));
+        showToast({ title: 'Plan updated', type: 'success' });
       } else {
-        await api.post('/membership-plans', formData);
-        toast({ title: 'Success', description: 'Plan created successfully' });
+        const created = await api.post<Plan>('/membership-plans', formData);
+        setPlans(ps => [...ps, created]);
+        showToast({ title: 'Plan created', type: 'success' });
       }
       setIsModalOpen(false);
-      fetchPlans();
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to save plan', variant: 'destructive' });
+      showToast({ title: 'Failed to save plan', message: err.message, type: 'error' });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleToggleActive = async (plan: Plan) => {
-    try {
-      await api.patch(`/membership-plans/${plan.id}`, { isActive: !plan.isActive });
-      toast({ title: 'Success', description: `Plan ${!plan.isActive ? 'activated' : 'deactivated'}` });
-      fetchPlans();
-    } catch (err: any) {
-      toast({ title: 'Error', description: 'Failed to update plan status', variant: 'destructive' });
-    }
-  };
+  const confirmDelete = (plan: Plan) => { setSelectedPlan(plan); setIsConfirmOpen(true); };
 
   const handleDelete = async () => {
     if (!selectedPlan) return;
+    setIsDeleting(true);
     try {
       await api.del(`/membership-plans/${selectedPlan.id}`);
-      toast({ title: 'Success', description: 'Plan deleted successfully' });
+      setPlans(ps => ps.filter(p => p.id !== selectedPlan.id));
+      showToast({ title: 'Plan deleted', type: 'success' });
       setIsConfirmOpen(false);
-      fetchPlans();
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to delete plan', variant: 'destructive' });
+      showToast({ title: 'Failed to delete plan', message: err.message, type: 'error' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
     <DashboardShell title="Membership Plans">
-      <PageHeader 
-        title="Membership Plans" 
-        description="Manage gym membership plans and pricing"
+      <PageHeader
+        title="Membership Plans"
+        description="Create and manage gym membership plans"
         action={
-          <Button onClick={() => handleOpenModal()} className="bg-[#F97316] hover:bg-[#F97316]/90 text-white">
-            <Plus className="mr-2 h-4 w-4" /> New Plan
+          <Button onClick={() => openModal()} icon={<Plus className="w-4 h-4" />}>
+            New Plan
           </Button>
         }
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 w-full rounded-xl bg-[#18181B]" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48" />)}
         </div>
       ) : error ? (
-        <ErrorState title="Failed to load plans" description={error} onRetry={fetchPlans} />
+        <ErrorState message={error} onRetry={fetchPlans} />
       ) : plans.length === 0 ? (
-        <EmptyState 
-          icon={<Plus className="h-8 w-8 text-zinc-500" />} 
-          title="No membership plans" 
-          description="Create your first membership plan to get started." 
-          action={<Button onClick={() => handleOpenModal()}>Create Plan</Button>} 
+        <EmptyState
+          icon={<Package className="w-12 h-12" />}
+          title="No plans yet"
+          description="Create your first membership plan to start signing up members."
+          action={<Button onClick={() => openModal()} icon={<Plus className="w-4 h-4" />}>Create First Plan</Button>}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {plans.map(plan => (
-            <Card key={plan.id} className="bg-[#18181B] border-[#27272A] hover:border-[#F97316]/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <h3 className="font-semibold text-lg text-white">{plan.name}</h3>
-                <Badge variant={plan.isActive ? 'success' : 'secondary'} onClick={() => handleToggleActive(plan)} className="cursor-pointer">
+            <div key={plan.id} className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 flex flex-col gap-4 hover:border-[#3F3F46] transition-colors">
+              <div className="flex items-start justify-between gap-2">
+                <div className="w-10 h-10 rounded-xl bg-[#F9731615] border border-[#F9731630] flex items-center justify-center flex-shrink-0">
+                  <Package className="w-5 h-5 text-[#F97316]" />
+                </div>
+                <Badge variant={plan.isActive ? 'success' : 'neutral'}>
                   {plan.isActive ? 'Active' : 'Inactive'}
                 </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="mt-2 mb-4">
-                  <span className="text-3xl font-bold text-white">{plan.price} EGP</span>
-                  <span className="text-zinc-400 text-sm ml-2">/ {formatDuration(plan.durationDays)}</span>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-[#FAFAFA]">{plan.name}</h3>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-[#A1A1AA]">
+                  <Clock className="w-4 h-4" />
+                  {formatDuration(plan.durationDays)}
                 </div>
-                <div className="flex gap-2 pt-4 border-t border-[#27272A]">
-                  <Button variant="outline" size="sm" className="flex-1 border-[#27272A] hover:bg-zinc-800" onClick={() => handleOpenModal(plan)}>
-                    <Edit className="h-4 w-4 mr-2" /> Edit
-                  </Button>
-                  <Button variant="destructive" size="sm" className="flex-1" onClick={() => { setSelectedPlan(plan); setIsConfirmOpen(true); }}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </Button>
+                <div className="flex items-center gap-1.5 text-[#F97316] font-semibold">
+                  <DollarSign className="w-4 h-4" />
+                  {fmt(plan.price)}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="flex gap-2 pt-1 border-t border-[#27272A]">
+                <Button variant="ghost" size="sm" icon={<Edit className="w-3.5 h-3.5" />} onClick={() => openModal(plan)} className="flex-1">
+                  Edit
+                </Button>
+                <Button variant="ghost" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => confirmDelete(plan)} className="flex-1 hover:text-[#EF4444] hover:bg-[#EF444415]">
+                  Delete
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      <Modal open={isModalOpen} onOpenChange={setIsModalOpen} title={selectedPlan ? 'Edit Plan' : 'Create Plan'}>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white">Plan Name</label>
-            <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Monthly Pro" className="bg-[#09090B] border-[#27272A]" />
+      {/* Create/Edit Modal */}
+      <Modal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={selectedPlan ? 'Edit Plan' : 'New Membership Plan'}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Plan Name"
+            required
+            value={formData.name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, name: e.target.value }))}
+            placeholder="e.g. Monthly Pro, 3-Month Bundle"
+          />
+          <Input
+            label="Duration (days)"
+            type="number"
+            min="1"
+            required
+            value={formData.durationDays}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, durationDays: parseInt(e.target.value) || 1 }))}
+            hint="30 = 1 month, 90 = 3 months, 365 = 1 year"
+          />
+          <Input
+            label="Price (EGP)"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            value={formData.price}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
+            placeholder="0.00"
+          />
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button loading={isSaving} onClick={handleSave}>
+              {selectedPlan ? 'Save Changes' : 'Create Plan'}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white">Duration (Days)</label>
-            <Input type="number" min="1" value={formData.durationDays} onChange={e => setFormData({...formData, durationDays: parseInt(e.target.value) || 0})} className="bg-[#09090B] border-[#27272A]" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-white">Price (EGP)</label>
-            <Input type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: parseInt(e.target.value) || 0})} className="bg-[#09090B] border-[#27272A]" />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isSaving || !formData.name || formData.durationDays < 1 || formData.price < 0} className="bg-[#F97316] hover:bg-[#F97316]/90 text-white">
-            {isSaving ? <Spinner className="mr-2" /> : null} Save
-          </Button>
         </div>
       </Modal>
 
-      <ConfirmDialog 
-        open={isConfirmOpen} 
-        onOpenChange={setIsConfirmOpen}
-        title="Delete Plan" 
-        description={`Are you sure you want to delete ${selectedPlan?.name}? This action cannot be undone.`}
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDelete}
+        title="Delete Plan"
+        description={`Are you sure you want to delete "${selectedPlan?.name}"? This cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="destructive"
+        isLoading={isDeleting}
       />
     </DashboardShell>
   );

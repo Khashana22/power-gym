@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerToken } from '../../../lib/session';
 
-const API_URL = 'http://localhost:3001';
+// In production, set NEXT_PUBLIC_API_URL in Vercel environment variables
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 async function handler(req: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const token = await getServerToken();

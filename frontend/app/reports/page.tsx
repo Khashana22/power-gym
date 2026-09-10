@@ -98,7 +98,7 @@ export default function ReportsPage() {
 
     try {
       // Navigate to the backend export URL directly (triggers download)
-      window.open(`http://localhost:3001${url}`, '_blank');
+      window.open(`${process.env.NEXT_PUBLIC_API_URL}${url}`, '_blank');
     } catch {
       toast({ title: 'Export failed', description: 'Please try again', variant: 'destructive' });
     }

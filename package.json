@@ -1,0 +1,12 @@
+{
+  "name": "power-gym",
+  "version": "1.0.0",
+  "description": "Power Gym Management System — monorepo root",
+  "private": true,
+  "scripts": {
+    "dev:all": "node dev.js",
+    "start:all": "node dev.js",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build:all": "cd backend && npm run build && cd ../frontend && npm run build"
+  }
+}

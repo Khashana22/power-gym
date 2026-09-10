@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getServerToken } from '../../../lib/session';
 
-const API_URL = 'http://localhost:3001';
+const API_URL = process.env.API_URL!;
 
 export async function GET() {
   const token = await getServerToken();
+
   if (!token) {
     return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });
   }
 
   const res = await fetch(API_URL + '/auth/me', {
-    headers: { Authorization: 'Bearer ' + token },
+    headers: {
+      Authorization: 'Bearer ' + token,
+    },
   });
 
   if (!res.ok) {
