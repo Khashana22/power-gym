@@ -31,9 +31,13 @@ export class MembershipCardService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    this.cardsDir = path.join(process.cwd(), 'uploads', 'cards');
-    if (!fs.existsSync(this.cardsDir)) {
-      fs.mkdirSync(this.cardsDir, { recursive: true });
+    this.cardsDir = process.env.VERCEL ? path.join('/tmp', 'uploads', 'cards') : path.join(process.cwd(), 'uploads', 'cards');
+    try {
+      if (!fs.existsSync(this.cardsDir)) {
+        fs.mkdirSync(this.cardsDir, { recursive: true });
+      }
+    } catch {
+      // Ignored in read-only serverless filesystems
     }
   }
 

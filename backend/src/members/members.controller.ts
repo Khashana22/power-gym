@@ -38,9 +38,13 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Ensure uploads directory exists
-const uploadsDir = join(process.cwd(), 'uploads', 'photos');
-if (!existsSync(uploadsDir)) {
-  mkdirSync(uploadsDir, { recursive: true });
+const uploadsDir = process.env.VERCEL ? join('/tmp', 'uploads', 'photos') : join(process.cwd(), 'uploads', 'photos');
+try {
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch {
+  // Ignored in read-only serverless filesystems
 }
 
 @UseGuards(JwtAuthGuard)

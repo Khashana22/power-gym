@@ -17,9 +17,13 @@ export class SnapshotsService {
   private readonly snapshotsDir: string;
 
   constructor(private readonly config: ConfigService) {
-    this.snapshotsDir = path.join(process.cwd(), 'snapshots');
-    if (!fs.existsSync(this.snapshotsDir)) {
-      fs.mkdirSync(this.snapshotsDir, { recursive: true });
+    this.snapshotsDir = process.env.VERCEL ? path.join('/tmp', 'snapshots') : path.join(process.cwd(), 'snapshots');
+    try {
+      if (!fs.existsSync(this.snapshotsDir)) {
+        fs.mkdirSync(this.snapshotsDir, { recursive: true });
+      }
+    } catch {
+      // Ignored in read-only serverless filesystems
     }
   }
 
