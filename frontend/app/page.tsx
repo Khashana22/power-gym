@@ -25,13 +25,13 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email.trim()) { setError('Email is required'); return; }
-    if (!password) { setError('Password is required'); return; }
+    if (!email.trim()) { setError('البريد الإلكتروني مطلوب'); return; }
+    if (!password) { setError('كلمة المرور مطلوبة'); return; }
     setSubmitting(true);
     try {
       await login(email.trim(), password);
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'فشل تسجيل الدخول، تأكد من صحة البيانات');
     } finally {
       setSubmitting(false);
     }
@@ -40,19 +40,19 @@ export default function LoginPage() {
   if (isLoading) return null;
 
   const features = [
-    { icon: <Zap className="w-4 h-4" />, text: 'Lightning-fast QR Check-in' },
-    { icon: <Shield className="w-4 h-4" />, text: 'Secure JWT Authentication' },
-    { icon: <BarChart2 className="w-4 h-4" />, text: 'Real-time Revenue Analytics' },
+    { icon: <Zap className="w-4 h-4" />, text: 'تسجيل حضور ذكي وفوري عبر الباركود و QR' },
+    { icon: <Shield className="w-4 h-4" />, text: 'حماية وتشفير متكامل لبيانات الأعضاء' },
+    { icon: <BarChart2 className="w-4 h-4" />, text: 'تقارير وإحصائيات مالية بالجنيه المصري لحظة بلحظة' },
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090B] flex">
-      {/* Left branding panel - hidden on mobile */}
+    <div className="min-h-screen bg-[#09090B] flex text-right">
+      {/* Right branding panel (RTL) - hidden on mobile */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0F0F11] via-[#18181B] to-[#09090B] flex-col p-12 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-[#F97316] opacity-5 blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-48 h-48 rounded-full bg-[#F97316] opacity-5 blur-3xl" />
+          <div className="absolute top-20 right-10 w-64 h-64 rounded-full bg-[#F97316] opacity-5 blur-3xl" />
+          <div className="absolute bottom-20 left-10 w-48 h-48 rounded-full bg-[#F97316] opacity-5 blur-3xl" />
         </div>
 
         {/* Logo */}
@@ -62,7 +62,7 @@ export default function LoginPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#FAFAFA] tracking-wider">POWER GYM</h1>
-            <p className="text-xs text-[#71717A]">Management System</p>
+            <p className="text-xs text-[#71717A]">نظام إدارة الجيم المتكامل</p>
           </div>
         </div>
 
@@ -70,11 +70,11 @@ export default function LoginPage() {
         <div className="mt-auto mb-auto flex flex-col gap-6 relative">
           <div>
             <h2 className="text-4xl font-bold text-[#FAFAFA] leading-tight">
-              Manage Your Gym<br />
-              <span className="text-gradient">Like a Pro</span>
+              أدِر جيمك باحترافية<br />
+              <span className="text-gradient">وسهولة كاملة</span>
             </h2>
-            <p className="text-base text-[#71717A] mt-3 leading-relaxed max-w-xs">
-              All-in-one platform for gym management, member tracking, and revenue analytics.
+            <p className="text-base text-[#71717A] mt-3 leading-relaxed max-w-sm">
+              المنصة الشاملة لإدارة الاشتراكات، ومتابعة حضور الأعضاء، والتقارير المالية والمدفوعات اليومية.
             </p>
           </div>
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 <div className="w-7 h-7 rounded-lg bg-[#F9731615] border border-[#F9731630] flex items-center justify-center text-[#F97316]">
                   {f.icon}
                 </div>
-                {f.text}
+                <span>{f.text}</span>
               </div>
             ))}
           </div>
@@ -93,12 +93,12 @@ export default function LoginPage() {
 
         {/* Footer branding */}
         <div className="text-xs text-[#52525B] relative">
-          <p>Developed by Sayed Khashana</p>
-          <p>01559666564</p>
+          <p>تم التطوير بواسطة: السيد خشانة</p>
+          <p dir="ltr" className="text-right">01559666564</p>
         </div>
       </div>
 
-      {/* Right login panel */}
+      {/* Left login form panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12">
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-3 mb-8">
@@ -110,25 +110,27 @@ export default function LoginPage() {
 
         <div className="w-full max-w-sm">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-[#FAFAFA]">Welcome back</h2>
-            <p className="text-sm text-[#71717A] mt-1">Sign in to your account to continue</p>
+            <h2 className="text-2xl font-bold text-[#FAFAFA]">مرحباً بك مجدداً</h2>
+            <p className="text-sm text-[#71717A] mt-1">سجل الدخول لحسابك لمتابعة إدارة النظام</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
-              label="Email address"
+              label="البريد الإلكتروني"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="you@powergym.com"
+              placeholder="admin@powergym.com"
               leftIcon={<Mail className="w-4 h-4" />}
               required
               autoComplete="email"
               id="login-email"
+              dir="ltr"
+              className="text-left"
             />
 
             <Input
-              label="Password"
+              label="كلمة المرور"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -147,6 +149,8 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               id="login-password"
+              dir="ltr"
+              className="text-left"
             />
 
             {error && (
@@ -163,12 +167,12 @@ export default function LoginPage() {
               size="lg"
               className="mt-2"
             >
-              {submitting ? 'Signing in...' : 'Sign in'}
+              {submitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </Button>
           </form>
 
           <p className="text-center text-xs text-[#52525B] mt-6">
-            Power Gym Management System v1.0
+            نظام Power Gym لإدارة الصالات الرياضية - الإصدار 1.0
           </p>
         </div>
       </div>

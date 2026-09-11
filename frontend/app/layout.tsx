@@ -1,25 +1,25 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cairo } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from './lib/auth-context';
 import { ToastProvider } from './components/ui/toast';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-cairo',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: { default: 'Power Gym', template: '%s | Power Gym' },
-  description: 'Professional Gym Management System',
+  title: { default: 'Power Gym | باور جيم', template: '%s | Power Gym' },
+  description: 'نظام إدارة الجيم المتكامل',
   icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-full bg-[#09090B] text-[#FAFAFA] antialiased font-sans">
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`} suppressHydrationWarning>
+      <body className="min-h-full bg-[#09090B] text-[#FAFAFA] antialiased font-['Cairo',sans-serif]">
         <ToastProvider>
           <AuthProvider>
             {children}

@@ -33,7 +33,7 @@ export function DashboardShell({ children, title, searchPlaceholder, onSearch }:
             <span className="text-2xl">💪</span>
           </div>
           <Spinner size="md" className="text-[#F97316]" />
-          <p className="text-sm text-[#71717A]">Loading...</p>
+          <p className="text-sm text-[#71717A]">جارٍ التحميل...</p>
         </div>
       </div>
     );

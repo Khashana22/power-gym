@@ -26,28 +26,28 @@ interface Notification {
 }
 
 const typeConfig = {
-  WELCOME:         { label: 'Welcome',          icon: UserPlus,      color: 'text-green-400',  bg: 'bg-green-500/10'  },
-  EXPIRY_REMINDER: { label: 'Expiry Reminder',  icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-  EXPIRED:         { label: 'Expired',          icon: CalendarX,     color: 'text-red-400',    bg: 'bg-red-500/10'    },
-  RENEWED:         { label: 'Renewed',          icon: CheckCircle2,  color: 'text-blue-400',   bg: 'bg-blue-500/10'   },
+  WELCOME:         { label: 'ترحيب',          icon: UserPlus,      color: 'text-green-400',  bg: 'bg-green-500/10'  },
+  EXPIRY_REMINDER: { label: 'تذكير بالانتهاء',  icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  EXPIRED:         { label: 'منتهي',          icon: CalendarX,     color: 'text-red-400',    bg: 'bg-red-500/10'    },
+  RENEWED:         { label: 'تم التجديد',       icon: CheckCircle2,  color: 'text-blue-400',   bg: 'bg-blue-500/10'   },
 };
 
 const statusConfig = {
-  PENDING: { label: 'Pending', color: 'text-yellow-400', icon: Clock },
-  SENT:    { label: 'Sent',    color: 'text-green-400',  icon: CheckCircle2 },
-  FAILED:  { label: 'Failed',  color: 'text-red-400',    icon: XCircle },
+  PENDING: { label: 'قيد الانتظار', color: 'text-yellow-400', icon: Clock },
+  SENT:    { label: 'تم الإرسال',    color: 'text-green-400',  icon: CheckCircle2 },
+  FAILED:  { label: 'فشل',          color: 'text-red-400',    icon: XCircle },
 };
 
 function formatRelative(date: string) {
   const diff = Date.now() - new Date(date).getTime();
   const s = Math.floor(diff / 1000);
-  if (s < 60)  return `${s}s ago`;
+  if (s < 60)  return `منذ ${s} ثانية`;
   const m = Math.floor(s / 60);
-  if (m < 60)  return `${m}m ago`;
+  if (m < 60)  return `منذ ${m} دقيقة`;
   const h = Math.floor(m / 60);
-  if (h < 24)  return `${h}h ago`;
+  if (h < 24)  return `منذ ${h} ساعة`;
   const d = Math.floor(h / 24);
-  return `${d}d ago`;
+  return `منذ ${d} يوم`;
 }
 
 export default function NotificationsPage() {
@@ -65,7 +65,7 @@ export default function NotificationsPage() {
       const data = await api.get<Notification[]>('/notifications');
       setNotifications(Array.isArray(data) ? data : []);
     } catch {
-      setError('Failed to load notifications.');
+      setError('فشل في تحميل الإشعارات.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -83,8 +83,15 @@ export default function NotificationsPage() {
   const totalPending = notifications.filter(n => n.status === 'PENDING').length;
   const totalFailed  = notifications.filter(n => n.status === 'FAILED').length;
 
+  const tabLabels = {
+    ALL: `الكل (${notifications.length})`,
+    SENT: 'تم الإرسال',
+    PENDING: 'قيد الانتظار',
+    FAILED: 'فشل',
+  };
+
   return (
-    <DashboardShell title="Notifications">
+    <DashboardShell title="الإشعارات">
       <div className="space-y-6">
 
         {/* WhatsApp header */}
@@ -96,9 +103,9 @@ export default function NotificationsPage() {
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-white">WhatsApp Notification Log</h2>
+                  <h2 className="text-lg font-semibold text-white">سجل إشعارات واتساب</h2>
                   <p className="text-sm text-zinc-400">
-                    Automated messages sent for memberships, renewals & expiries
+                    الرسائل التلقائية المرسلة للمشتركين للتجديدات والتنبيهات
                   </p>
                 </div>
               </div>
@@ -109,25 +116,25 @@ export default function NotificationsPage() {
                 onClick={() => fetchNotifications(true)}
                 disabled={refreshing}
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? 'animate-spin' : ''}`} />
+                تحديث
               </Button>
             </div>
           </div>
 
           {/* Summary stats */}
-          <div className="grid grid-cols-3 divide-x divide-[#27272A]">
+          <div className="grid grid-cols-3 divide-x divide-x-reverse divide-[#27272A]">
             <div className="p-4 text-center">
               <p className="text-2xl font-bold text-green-400">{totalSent}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Sent</p>
+              <p className="text-xs text-zinc-500 mt-0.5">تم الإرسال</p>
             </div>
             <div className="p-4 text-center">
               <p className="text-2xl font-bold text-yellow-400">{totalPending}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Pending</p>
+              <p className="text-xs text-zinc-500 mt-0.5">قيد الانتظار</p>
             </div>
             <div className="p-4 text-center">
               <p className="text-2xl font-bold text-red-400">{totalFailed}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Failed</p>
+              <p className="text-xs text-zinc-500 mt-0.5">فشلت</p>
             </div>
           </div>
         </Card>
@@ -144,7 +151,7 @@ export default function NotificationsPage() {
                   : 'border-transparent text-zinc-400 hover:text-white'
               }`}
             >
-              {tab === 'ALL' ? `All (${notifications.length})` : tab}
+              {tabLabels[tab]}
             </button>
           ))}
         </div>
@@ -173,18 +180,18 @@ export default function NotificationsPage() {
                   className="mt-4 border-[#27272A] text-white hover:bg-[#27272A]"
                   onClick={() => fetchNotifications()}
                 >
-                  Try Again
+                  إعادة المحاولة
                 </Button>
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-12">
                 <EmptyState
                   icon={<Bell className="w-12 h-12 text-zinc-500" />}
-                  title={filter === 'ALL' ? 'No Notifications Yet' : `No ${filter} Notifications`}
+                  title={filter === 'ALL' ? 'لا توجد إشعارات بعد' : `لا توجد إشعارات بحالة "${tabLabels[filter]}"`}
                   description={
                     filter === 'ALL'
-                      ? 'Notification history will appear here as members are added, subscriptions renewed, or expiry reminders are sent.'
-                      : `There are currently no notifications with status "${filter}".`
+                      ? 'سيظهر سجل الإشعارات والرسائل التلقائية هنا بمجرد إرسالها للأعضاء.'
+                      : `لا توجد أي إشعارات مسجلة بحالة "${tabLabels[filter]}".`
                   }
                 />
               </div>
@@ -205,8 +212,8 @@ export default function NotificationsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-semibold text-white">{n.member.fullName}</span>
-                          <span className="text-xs text-zinc-500">{n.member.memberCode}</span>
-                          <Badge className={`ml-auto text-xs px-2 py-0.5 ${tc.bg} ${tc.color} border-0`}>
+                          <span className="text-xs text-zinc-500 font-mono">{n.member.memberCode}</span>
+                          <Badge className={`mr-auto text-xs px-2 py-0.5 ${tc.bg} ${tc.color} border-0`}>
                             {tc.label}
                           </Badge>
                         </div>
@@ -219,8 +226,8 @@ export default function NotificationsPage() {
                           <span className="text-xs text-zinc-600">•</span>
                           <span className="text-xs text-zinc-500">
                             {n.sentAt
-                              ? `Sent ${formatRelative(n.sentAt)}`
-                              : `Created ${formatRelative(n.createdAt)}`}
+                              ? `أُرسلت ${formatRelative(n.sentAt)}`
+                              : `أُنشئت ${formatRelative(n.createdAt)}`}
                           </span>
                         </div>
                       </div>

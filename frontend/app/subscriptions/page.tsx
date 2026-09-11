@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, Badge, Spinner, EmptyState, ErrorState, Modal, PageHeader, Avatar, Skeleton } from '../components/ui';
@@ -38,14 +38,18 @@ const STATUS_BADGE: Record<string, 'success' | 'danger' | 'info' | 'warning' | '
   ACTIVE: 'success', EXPIRED: 'danger', FROZEN: 'info',
 };
 
+const STATUS_TEXT: Record<string, string> = {
+  ACTIVE: 'نشط', EXPIRED: 'منتهي', FROZEN: 'مجمّد',
+};
+
 const PAYMENT_METHODS = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'VISA', label: 'Visa' },
-  { value: 'INSTAPAY', label: 'Instapay' },
-  { value: 'VODAFONE_CASH', label: 'Vodafone Cash' },
+  { value: 'CASH', label: 'كاش (نقدي)' },
+  { value: 'VISA', label: 'فيزا / بطاقة بنكية' },
+  { value: 'INSTAPAY', label: 'إنستاباي (InstaPay)' },
+  { value: 'VODAFONE_CASH', label: 'فودافون كاش (Vodafone Cash)' },
 ];
 
-function fmt(n: number) { return 'EGP ' + new Intl.NumberFormat('en-EG').format(n); }
+function fmt(n: number) { return new Intl.NumberFormat('ar-EG').format(n) + ' ج.م'; }
 
 function remainingDays(endDate: string) {
   const diff = new Date(endDate).getTime() - Date.now();
@@ -96,7 +100,7 @@ export default function SubscriptionsPage() {
 
       setSubscriptions(subsResults.filter(Boolean) as Subscription[]);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch data');
+      setError(err.message || 'فشل في تحميل بيانات الاشتراكات');
     } finally {
       setIsLoading(false);
     }
@@ -124,49 +128,54 @@ export default function SubscriptionsPage() {
       if (amount > 0) {
         await api.post('/payments', { subscriptionId: newSub.id, amount, method: renewMethod });
       }
-      showToast({ title: 'Subscription renewed', type: 'success' });
+      showToast({ title: 'تم التجديد', message: 'تم تجديد الاشتراك بنجاح', type: 'success' });
       setRenewModal(false);
       fetchData();
     } catch (err: any) {
-      showToast({ title: 'Failed to renew', message: err.message, type: 'error' });
+      showToast({ title: 'خطأ', message: err.message || 'فشل في تجديد الاشتراك', type: 'error' });
     } finally {
       setIsRenewing(false);
     }
   };
 
   const filtered = filter === 'All' ? subscriptions : subscriptions.filter(s => s.status === filter);
-  const filterOptions: ('All' | 'ACTIVE' | 'EXPIRED' | 'FROZEN')[] = ['All', 'ACTIVE', 'EXPIRED', 'FROZEN'];
+  const filterOptions: { key: 'All' | 'ACTIVE' | 'EXPIRED' | 'FROZEN'; label: string }[] = [
+    { key: 'All', label: 'الكل' },
+    { key: 'ACTIVE', label: 'نشط' },
+    { key: 'EXPIRED', label: 'منتهي' },
+    { key: 'FROZEN', label: 'مجمّد' },
+  ];
 
   return (
-    <DashboardShell title="Subscriptions">
-      <PageHeader title="Subscriptions" description="Monitor member subscriptions and manage renewals" />
+    <DashboardShell title="الاشتراكات">
+      <PageHeader title="الاشتراكات" description="متابعة اشتراكات الأعضاء وتجديد الخطط" />
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {filterOptions.map(f => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={f.key}
+            onClick={() => setFilter(f.key)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filter === f
+              filter === f.key
                 ? 'bg-[#F97316] text-white'
                 : 'text-[#71717A] hover:text-[#FAFAFA] border border-[#27272A] hover:border-[#3F3F46]'
             }`}
           >
-            {f === 'All' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
-            {f !== 'All' && (
-              <span className="ml-1.5 text-xs opacity-70">
-                ({subscriptions.filter(s => s.status === f).length})
+            {f.label}
+            {f.key !== 'All' && (
+              <span className="mr-1.5 text-xs opacity-70">
+                ({subscriptions.filter(s => s.status === f.key).length})
               </span>
             )}
           </button>
         ))}
         <button
           onClick={fetchData}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#71717A] hover:text-[#FAFAFA] border border-[#27272A] hover:border-[#3F3F46] transition-colors"
+          className="mr-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#71717A] hover:text-[#FAFAFA] border border-[#27272A] hover:border-[#3F3F46] transition-colors"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
+          <RefreshCw className="w-3.5 h-3.5 ml-1" />
+          تحديث
         </button>
       </div>
 
@@ -177,20 +186,20 @@ export default function SubscriptionsPage() {
       ) : error ? (
         <ErrorState message={error} onRetry={fetchData} />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={<CreditCard className="w-10 h-10" />} title="No subscriptions found" description="Subscriptions will appear here once members sign up for plans." />
+        <EmptyState icon={<CreditCard className="w-10 h-10" />} title="لا توجد اشتراكات" description="ستظهر اشتراكات الأعضاء هنا بمجرد تسجيلهم في الخطط." />
       ) : (
         <Card>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full text-sm text-right">
               <thead className="text-xs text-[#71717A] uppercase border-b border-[#27272A] bg-[#0F0F11]">
                 <tr>
-                  <th className="px-5 py-3 font-medium">Member</th>
-                  <th className="px-5 py-3 font-medium">Plan</th>
-                  <th className="px-5 py-3 font-medium">Start</th>
-                  <th className="px-5 py-3 font-medium">End</th>
-                  <th className="px-5 py-3 font-medium">Remaining</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium text-right">Actions</th>
+                  <th className="px-5 py-3 font-medium">العضو</th>
+                  <th className="px-5 py-3 font-medium">الخطة</th>
+                  <th className="px-5 py-3 font-medium">تاريخ البدء</th>
+                  <th className="px-5 py-3 font-medium">تاريخ الانتهاء</th>
+                  <th className="px-5 py-3 font-medium">المتبقي</th>
+                  <th className="px-5 py-3 font-medium">الحالة</th>
+                  <th className="px-5 py-3 font-medium text-left">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#27272A]">
@@ -203,28 +212,28 @@ export default function SubscriptionsPage() {
                           <Avatar name={sub.member.fullName} photo={sub.member.photo} size="sm" />
                           <div>
                             <p className="text-sm font-medium text-[#FAFAFA]">{sub.member.fullName}</p>
-                            <p className="text-xs text-[#71717A]">{sub.member.memberCode}</p>
+                            <p className="text-xs text-[#71717A] font-mono">{sub.member.memberCode}</p>
                           </div>
                         </Link>
                       </td>
                       <td className="px-5 py-3 text-[#A1A1AA]">{sub.plan?.name}</td>
-                      <td className="px-5 py-3 text-[#A1A1AA]">{new Date(sub.startDate).toLocaleDateString('en-EG')}</td>
-                      <td className="px-5 py-3 text-[#A1A1AA]">{new Date(sub.endDate).toLocaleDateString('en-EG')}</td>
+                      <td className="px-5 py-3 text-[#A1A1AA]">{new Date(sub.startDate).toLocaleDateString('ar-EG')}</td>
+                      <td className="px-5 py-3 text-[#A1A1AA]">{new Date(sub.endDate).toLocaleDateString('ar-EG')}</td>
                       <td className="px-5 py-3">
                         {sub.status === 'EXPIRED' ? (
-                          <span className="text-[#EF4444] text-xs">Expired</span>
+                          <span className="text-[#EF4444] text-xs font-medium">منتهي</span>
                         ) : (
                           <span className={`text-sm font-medium ${days <= 3 ? 'text-[#EF4444]' : days <= 7 ? 'text-[#F59E0B]' : 'text-[#22C55E]'}`}>
-                            {days}d
+                            {days} يوم
                           </span>
                         )}
                       </td>
                       <td className="px-5 py-3">
-                        <Badge variant={STATUS_BADGE[sub.status] || 'neutral'}>{sub.status}</Badge>
+                        <Badge variant={STATUS_BADGE[sub.status] || 'neutral'}>{STATUS_TEXT[sub.status] || sub.status}</Badge>
                       </td>
-                      <td className="px-5 py-3 text-right">
-                        <Button size="sm" variant="outline" onClick={() => openRenew(sub)} icon={<RefreshCw className="w-3.5 h-3.5" />}>
-                          Renew
+                      <td className="px-5 py-3 text-left">
+                        <Button size="sm" variant="outline" onClick={() => openRenew(sub)} icon={<RefreshCw className="w-3.5 h-3.5 ml-1" />}>
+                          تجديد
                         </Button>
                       </td>
                     </tr>
@@ -240,12 +249,12 @@ export default function SubscriptionsPage() {
       <Modal
         open={renewModal}
         onClose={() => setRenewModal(false)}
-        title={`Renew: ${selectedSub?.member.fullName}`}
+        title={`تجديد اشتراك: ${selectedSub?.member.fullName}`}
         size="md"
       >
         <div className="space-y-4">
           <Select
-            label="Select Plan"
+            label="اختر الخطة"
             required
             value={renewPlanId}
             onChange={e => {
@@ -253,31 +262,32 @@ export default function SubscriptionsPage() {
               const p = plans.find(p => p.id === e.target.value);
               if (p) setRenewAmount(String(p.price));
             }}
-            options={plans.map(p => ({ value: p.id, label: `${p.name} — ${fmt(p.price)} / ${p.durationDays}d` }))}
-            placeholder="Choose plan..."
+            options={plans.map(p => ({ value: p.id, label: `${p.name} — ${fmt(p.price)} / ${p.durationDays} يوم` }))}
+            placeholder="اختر خطة الاشتراك..."
           />
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[#A1A1AA]">Amount (EGP) <span className="text-[#EF4444]">*</span></label>
+            <label className="text-sm font-medium text-[#A1A1AA]">المبلغ (ج.م) <span className="text-[#EF4444]">*</span></label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={renewAmount}
               onChange={e => setRenewAmount(e.target.value)}
-              className="w-full h-10 rounded-lg bg-[#18181B] border border-[#27272A] text-[#FAFAFA] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
+              className="w-full h-10 rounded-lg bg-[#18181B] border border-[#27272A] text-[#FAFAFA] text-sm px-3 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent text-left font-mono"
               placeholder="0.00"
+              dir="ltr"
             />
           </div>
           <Select
-            label="Payment Method"
+            label="طريقة الدفع"
             value={renewMethod}
             onChange={e => setRenewMethod(e.target.value)}
             options={PAYMENT_METHODS}
           />
           <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setRenewModal(false)}>Cancel</Button>
-            <Button loading={isRenewing} onClick={handleRenew} disabled={!renewPlanId}>
-              Confirm Renewal
+            <Button variant="ghost" onClick={() => setRenewModal(false)}>إلغاء</Button>
+            <Button loading={isRenewing} onClick={handleRenew} disabled={!renewPlanId} className="bg-[#F97316] hover:bg-[#ea580c] text-white">
+              تأكيد التجديد
             </Button>
           </div>
         </div>

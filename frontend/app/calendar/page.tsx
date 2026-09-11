@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { DashboardShell } from '../components/dashboard-shell';
@@ -52,8 +52,8 @@ export default function CalendarPage() {
   const today = new Date();
   const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
 
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const dayNames = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
   const renderCells = () => {
     const cells = [];
@@ -77,11 +77,11 @@ export default function CalendarPage() {
           
           {isToday && stats && (
             <div className="mt-auto space-y-1">
-              <div className="text-xs bg-green-500/10 text-green-400 px-2 py-1 rounded flex items-center gap-1">
-                <DollarSign className="w-3 h-3" /> ${stats.revenue}
+              <div className="text-xs bg-green-500/10 text-green-400 px-2 py-1 rounded flex items-center gap-1 font-medium">
+                <DollarSign className="w-3 h-3" /> {stats.revenue} ج.م
               </div>
-              <div className="text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded flex items-center gap-1">
-                <Users className="w-3 h-3" /> {stats.todayAttendance}
+              <div className="text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded flex items-center gap-1 font-medium">
+                <Users className="w-3 h-3" /> {stats.todayAttendance} حضور
               </div>
             </div>
           )}
@@ -93,7 +93,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <DashboardShell title="Calendar">
+    <DashboardShell title="التقويم">
       <Card className="border-[#27272A] bg-[#18181B] overflow-hidden">
         
         <div className="p-6 border-b border-[#27272A] flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -102,24 +102,24 @@ export default function CalendarPage() {
               {monthNames[month]} {year}
             </h2>
             <div className="flex bg-[#09090B] rounded-lg border border-[#27272A] overflow-hidden">
-              <button onClick={prevMonth} className="p-2 text-zinc-400 hover:text-white hover:bg-[#27272A] transition-colors">
-                <ChevronLeft className="w-5 h-5" />
+              <button onClick={prevMonth} className="p-2 text-zinc-400 hover:text-white hover:bg-[#27272A] transition-colors" title="الشهر السابق">
+                <ChevronRight className="w-5 h-5" />
               </button>
               <button onClick={goToToday} className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white hover:bg-[#27272A] border-x border-[#27272A] transition-colors">
-                Today
+                اليوم
               </button>
-              <button onClick={nextMonth} className="p-2 text-zinc-400 hover:text-white hover:bg-[#27272A] transition-colors">
-                <ChevronRight className="w-5 h-5" />
+              <button onClick={nextMonth} className="p-2 text-zinc-400 hover:text-white hover:bg-[#27272A] transition-colors" title="الشهر التالي">
+                <ChevronLeft className="w-5 h-5" />
               </button>
             </div>
           </div>
           
           <div className="flex gap-4">
             <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div> Revenue
+              <div className="w-3 h-3 rounded-full bg-green-500"></div> الإيرادات
             </div>
             <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div> Attendance
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div> الحضور
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function CalendarPage() {
         <div className="p-6">
           <div className="grid grid-cols-7 mb-2">
             {dayNames.map(day => (
-              <div key={day} className="text-center font-medium text-zinc-500 text-sm py-2">
+              <div key={day} className="text-center font-medium text-zinc-400 text-sm py-2">
                 {day}
               </div>
             ))}

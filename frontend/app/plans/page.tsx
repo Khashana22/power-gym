@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, Badge, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../components/ui';
+import { Badge, EmptyState, ErrorState, Modal, ConfirmDialog, PageHeader, Skeleton } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { DashboardShell } from '../components/dashboard-shell';
@@ -18,14 +18,17 @@ interface Plan {
 }
 
 function fmt(n: number) {
-  return 'EGP ' + new Intl.NumberFormat('en-EG').format(n);
+  return new Intl.NumberFormat('ar-EG').format(n) + ' ج.م';
 }
 
 function formatDuration(days: number) {
-  if (days === 365) return '1 year';
-  if (days % 30 === 0) { const m = days / 30; return `${m} month${m > 1 ? 's' : ''}`; }
-  if (days % 7 === 0) { const w = days / 7; return `${w} week${w > 1 ? 's' : ''}`; }
-  return `${days} days`;
+  if (days === 365) return 'سنة كاملة';
+  if (days === 30) return 'شهر واحد';
+  if (days === 60) return 'شهران';
+  if (days % 30 === 0) { const m = days / 30; return `${m} أشهر`; }
+  if (days === 7) return 'أسبوع';
+  if (days % 7 === 0) { const w = days / 7; return `${w} أسابيع`; }
+  return `${days} يوم`;
 }
 
 export default function PlansPage() {
@@ -47,7 +50,7 @@ export default function PlansPage() {
       const data = await api.get<Plan[]>('/membership-plans');
       setPlans(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch plans');
+      setError(err.message || 'فشل تحميل خطط العضوية');
     } finally {
       setIsLoading(false);
     }
@@ -67,24 +70,24 @@ export default function PlansPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name.trim()) { showToast({ title: 'Plan name is required', type: 'warning' }); return; }
-    if (formData.durationDays < 1) { showToast({ title: 'Duration must be at least 1 day', type: 'warning' }); return; }
-    if (formData.price < 0) { showToast({ title: 'Price cannot be negative', type: 'warning' }); return; }
+    if (!formData.name.trim()) { showToast({ title: 'اسم الخطة مطلوب', type: 'warning' }); return; }
+    if (formData.durationDays < 1) { showToast({ title: 'يجب أن تكون المدة يوماً واحداً على الأقل', type: 'warning' }); return; }
+    if (formData.price < 0) { showToast({ title: 'لا يمكن أن يكون السعر بالسالب', type: 'warning' }); return; }
 
     setIsSaving(true);
     try {
       if (selectedPlan) {
         const updated = await api.patch<Plan>(`/membership-plans/${selectedPlan.id}`, formData);
         setPlans(ps => ps.map(p => p.id === updated.id ? updated : p));
-        showToast({ title: 'Plan updated', type: 'success' });
+        showToast({ title: 'تم تحديث الخطة بنجاح', type: 'success' });
       } else {
         const created = await api.post<Plan>('/membership-plans', formData);
         setPlans(ps => [...ps, created]);
-        showToast({ title: 'Plan created', type: 'success' });
+        showToast({ title: 'تم إنشاء الخطة بنجاح', type: 'success' });
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      showToast({ title: 'Failed to save plan', message: err.message, type: 'error' });
+      showToast({ title: 'فشل حفظ الخطة', message: err.message, type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -98,23 +101,23 @@ export default function PlansPage() {
     try {
       await api.del(`/membership-plans/${selectedPlan.id}`);
       setPlans(ps => ps.filter(p => p.id !== selectedPlan.id));
-      showToast({ title: 'Plan deleted', type: 'success' });
+      showToast({ title: 'تم حذف الخطة بنجاح', type: 'success' });
       setIsConfirmOpen(false);
     } catch (err: any) {
-      showToast({ title: 'Failed to delete plan', message: err.message, type: 'error' });
+      showToast({ title: 'فشل حذف الخطة', message: err.message, type: 'error' });
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <DashboardShell title="Membership Plans">
+    <DashboardShell title="خطط العضوية والاشتراكات">
       <PageHeader
-        title="Membership Plans"
-        description="Create and manage gym membership plans"
+        title="خطط وباقات العضوية"
+        description="إدارة عروض واشتراكات الجيم وتحديد أسعارها بالجنيه المصري"
         action={
           <Button onClick={() => openModal()} icon={<Plus className="w-4 h-4" />}>
-            New Plan
+            خطة جديدة
           </Button>
         }
       />
@@ -128,12 +131,12 @@ export default function PlansPage() {
       ) : plans.length === 0 ? (
         <EmptyState
           icon={<Package className="w-12 h-12" />}
-          title="No plans yet"
-          description="Create your first membership plan to start signing up members."
-          action={<Button onClick={() => openModal()} icon={<Plus className="w-4 h-4" />}>Create First Plan</Button>}
+          title="لا توجد خطط عضوية حتى الآن"
+          description="أضف باقات الاشتراكات لتتمكن من تسجيل وتجديد اشتراكات الأعضاء."
+          action={<Button onClick={() => openModal()} icon={<Plus className="w-4 h-4" />}>إضافة أول خطة</Button>}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-right">
           {plans.map(plan => (
             <div key={plan.id} className="bg-[#18181B] border border-[#27272A] rounded-xl p-5 flex flex-col gap-4 hover:border-[#3F3F46] transition-colors">
               <div className="flex items-start justify-between gap-2">
@@ -141,7 +144,7 @@ export default function PlansPage() {
                   <Package className="w-5 h-5 text-[#F97316]" />
                 </div>
                 <Badge variant={plan.isActive ? 'success' : 'neutral'}>
-                  {plan.isActive ? 'Active' : 'Inactive'}
+                  {plan.isActive ? 'مفعلة' : 'غير نشطة'}
                 </Badge>
               </div>
 
@@ -152,20 +155,20 @@ export default function PlansPage() {
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5 text-[#A1A1AA]">
                   <Clock className="w-4 h-4" />
-                  {formatDuration(plan.durationDays)}
+                  <span>{formatDuration(plan.durationDays)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#F97316] font-semibold">
                   <DollarSign className="w-4 h-4" />
-                  {fmt(plan.price)}
+                  <span>{fmt(plan.price)}</span>
                 </div>
               </div>
 
               <div className="flex gap-2 pt-1 border-t border-[#27272A]">
                 <Button variant="ghost" size="sm" icon={<Edit className="w-3.5 h-3.5" />} onClick={() => openModal(plan)} className="flex-1">
-                  Edit
+                  تعديل
                 </Button>
                 <Button variant="ghost" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => confirmDelete(plan)} className="flex-1 hover:text-[#EF4444] hover:bg-[#EF444415]">
-                  Delete
+                  حذف
                 </Button>
               </div>
             </div>
@@ -177,28 +180,28 @@ export default function PlansPage() {
       <Modal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedPlan ? 'Edit Plan' : 'New Membership Plan'}
+        title={selectedPlan ? 'تعديل خطة العضوية' : 'خطة عضوية جديدة'}
         size="sm"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 text-right">
           <Input
-            label="Plan Name"
+            label="اسم الخطة أو الباقة"
             required
             value={formData.name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, name: e.target.value }))}
-            placeholder="e.g. Monthly Pro, 3-Month Bundle"
+            placeholder="مثال: اشتراك شهري VIP، باقة 3 شهور"
           />
           <Input
-            label="Duration (days)"
+            label="المدة (بالأيام)"
             type="number"
             min="1"
             required
             value={formData.durationDays}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, durationDays: parseInt(e.target.value) || 1 }))}
-            hint="30 = 1 month, 90 = 3 months, 365 = 1 year"
+            hint="30 = شهر، 90 = 3 شهور، 180 = 6 شهور، 365 = سنة"
           />
           <Input
-            label="Price (EGP)"
+            label="السعر (بالجنيه المصري)"
             type="number"
             min="0"
             step="0.01"
@@ -207,10 +210,10 @@ export default function PlansPage() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
             placeholder="0.00"
           />
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+          <div className="flex gap-2 justify-start pt-2">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)}>إلغاء</Button>
             <Button loading={isSaving} onClick={handleSave}>
-              {selectedPlan ? 'Save Changes' : 'Create Plan'}
+              {selectedPlan ? 'حفظ التعديلات' : 'إنشاء الخطة'}
             </Button>
           </div>
         </div>
@@ -220,9 +223,9 @@ export default function PlansPage() {
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Plan"
-        description={`Are you sure you want to delete "${selectedPlan?.name}"? This cannot be undone.`}
-        confirmText="Delete"
+        title="تأكيد حذف الخطة"
+        description={`هل أنت متأكد من حذف باقة "${selectedPlan?.name}"؟ لن يؤثر هذا على الاشتراكات السارية حالياً.`}
+        confirmText="تأكيد الحذف"
         confirmVariant="destructive"
         isLoading={isDeleting}
       />

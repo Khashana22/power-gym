@@ -70,25 +70,25 @@ export default function MembersPage() {
     try {
       setDeleting(true);
       await api.del(`/members/${deleteId}`);
-      showToast({ title: 'Success', message: 'Member deleted successfully', type: 'success' });
+      showToast({ title: 'تم بنجاح', message: 'تم حذف العضو بنجاح', type: 'success' });
       setMembers(members.filter(m => m.id !== deleteId));
       setDeleteId(null);
     } catch (err: any) {
-      showToast({ title: 'Error', message: err.message || 'Failed to delete member', type: 'error' });
+      showToast({ title: 'خطأ', message: err.message || 'فشل في حذف العضو', type: 'error' });
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <DashboardShell title="Members">
+    <DashboardShell title="الأعضاء">
       <PageHeader 
-        title="Members" 
-        description="Manage gym members and their subscriptions"
+        title="الأعضاء" 
+        description="إدارة أعضاء الجيم واشتراكاتهم"
         action={
-          <Button onClick={() => router.push('/members/new')} className="gap-2">
+          <Button onClick={() => router.push('/members/new')} className="gap-2 bg-[#F97316] hover:bg-[#ea580c] text-white">
             <Plus className="h-4 w-4" />
-            Add Member
+            إضافة عضو
           </Button>
         }
       />
@@ -97,10 +97,10 @@ export default function MembersPage() {
         <CardContent className="p-0">
           <div className="p-4 border-b border-[#27272A] flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input 
-                placeholder="Search by name, phone or code..." 
-                className="pl-9"
+                placeholder="البحث بالاسم أو الهاتف أو الكود..." 
+                className="pr-9 text-right"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -111,15 +111,15 @@ export default function MembersPage() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="w-full text-sm text-right">
               <thead className="text-xs text-zinc-400 bg-zinc-900/50 uppercase border-b border-[#27272A]">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Member</th>
-                  <th className="px-6 py-4 font-medium">Code</th>
-                  <th className="px-6 py-4 font-medium">Phone</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Joined</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  <th className="px-6 py-4 font-medium">العضو</th>
+                  <th className="px-6 py-4 font-medium">كود العضو</th>
+                  <th className="px-6 py-4 font-medium">رقم الهاتف</th>
+                  <th className="px-6 py-4 font-medium">الحالة</th>
+                  <th className="px-6 py-4 font-medium">تاريخ الانضمام</th>
+                  <th className="px-6 py-4 font-medium text-left">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#27272A]">
@@ -131,25 +131,25 @@ export default function MembersPage() {
                       <td className="px-6 py-4"><Skeleton className="h-6 w-32" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-6 w-20" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-6 w-24" /></td>
-                      <td className="px-6 py-4 flex justify-end"><Skeleton className="h-8 w-16" /></td>
+                      <td className="px-6 py-4 flex justify-start"><Skeleton className="h-8 w-16" /></td>
                     </tr>
                   ))
                 ) : error ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8">
-                      <ErrorState title="Error Loading Members" description={error} onRetry={fetchMembers} />
+                      <ErrorState title="خطأ في تحميل الأعضاء" description={error} onRetry={fetchMembers} />
                     </td>
                   </tr>
                 ) : paginatedMembers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8">
                       <EmptyState 
-                        title="No members found" 
-                        description={search ? "Try adjusting your search filters" : "Add your first member to get started"} 
+                        title="لم يتم العثور على أعضاء" 
+                        description={search ? "جرّب تعديل كلمات البحث" : "أضف أول عضو في الجيم للبدء"} 
                         action={
                           !search ? (
                             <Button onClick={() => router.push('/members/new')} variant="outline">
-                              Add Member
+                              إضافة عضو
                             </Button>
                           ) : undefined
                         }
@@ -166,21 +166,21 @@ export default function MembersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-zinc-300">{member.memberCode}</td>
-                      <td className="px-6 py-4 text-zinc-300">{member.phone}</td>
+                      <td className="px-6 py-4 text-zinc-300 font-mono" dir="ltr">{member.phone}</td>
                       <td className="px-6 py-4">
                         <Badge variant={member.isActive ? "success" : "destructive"}>
-                          {member.isActive ? "Active" : "Inactive"}
+                          {member.isActive ? "نشط" : "غير نشط"}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-zinc-400">
-                        {new Date(member.createdAt).toLocaleDateString()}
+                        {new Date(member.createdAt).toLocaleDateString('ar-EG')}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="icon" variant="ghost" onClick={() => router.push(`/members/${member.id}`)}>
-                            <Eye className="h-4 w-4 text-zinc-400" />
+                      <td className="px-6 py-4 text-left">
+                        <div className="flex justify-start gap-2">
+                          <Button size="icon" variant="ghost" onClick={() => router.push(`/members/${member.id}`)} title="عرض الملف">
+                            <Eye className="h-4 w-4 text-zinc-400 hover:text-white" />
                           </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(member.id)} className="hover:text-red-500 hover:bg-red-500/10">
+                          <Button size="icon" variant="ghost" onClick={() => setDeleteId(member.id)} className="hover:text-red-500 hover:bg-red-500/10" title="حذف">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -195,7 +195,7 @@ export default function MembersPage() {
           {!loading && !error && totalPages > 1 && (
             <div className="p-4 border-t border-[#27272A] flex justify-between items-center">
               <span className="text-sm text-zinc-400">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length}
+                عرض {(currentPage - 1) * itemsPerPage + 1} إلى {Math.min(currentPage * itemsPerPage, filteredMembers.length)} من {filteredMembers.length}
               </span>
               <div className="flex gap-2">
                 <Button 
@@ -204,7 +204,7 @@ export default function MembersPage() {
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(p => p - 1)}
                 >
-                  Previous
+                  السابق
                 </Button>
                 <Button 
                   variant="outline" 
@@ -212,7 +212,7 @@ export default function MembersPage() {
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(p => p + 1)}
                 >
-                  Next
+                  التالي
                 </Button>
               </div>
             </div>
@@ -224,9 +224,9 @@ export default function MembersPage() {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Delete Member"
-        description="Are you sure you want to delete this member? This action cannot be undone."
-        confirmText="Delete Member"
+        title="حذف العضو"
+        description="هل أنت متأكد من حذف هذا العضو؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف العضو"
         confirmVariant="destructive"
         isLoading={deleting}
       />

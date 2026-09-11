@@ -44,10 +44,10 @@ interface DashboardStats {
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 function fmt(n: number) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat('ar-EG', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
 }
 function currency(n: number) {
-  return new Intl.NumberFormat('en', { style: 'currency', currency: 'MAD', maximumFractionDigits: 0 }).format(n);
+  return `${fmt(n)} ج.م`;
 }
 function daysLeft(dateStr: string) {
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -61,10 +61,10 @@ function ChartTooltip({ active, payload, label, isCurrency }: {
   if (!active || !payload?.length) return null;
   const val = payload[0].value;
   return (
-    <div className="bg-[#18181B] border border-[#27272A] rounded-lg px-3 py-2 shadow-xl">
+    <div className="bg-[#18181B] border border-[#27272A] rounded-lg px-3 py-2 shadow-xl text-right">
       <p className="text-xs text-[#71717A] mb-0.5">{label}</p>
       <p className="text-sm font-semibold text-[#FAFAFA]">
-        {isCurrency ? currency(val) : fmt(val)}
+        {isCurrency ? currency(val) : `${fmt(val)} عضو`}
       </p>
     </div>
   );
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       const data = await api.get<DashboardStats>('/dashboard/stats');
       setStats(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load dashboard');
+      setError(e instanceof Error ? e.message : 'فشل تحميل بيانات لوحة التحكم');
     } finally {
       setLoading(false);
     }
@@ -136,38 +136,38 @@ export default function DashboardPage() {
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
   return (
-    <DashboardShell title="Dashboard">
+    <DashboardShell title="لوحة التحكم الرئيسية">
       <div className="space-y-6 max-w-screen-2xl">
 
         {/* ── Stats Row ─────────────────────────────────────────────── */}
         {loading ? <StatsSkeleton /> : error ? (
-          <ErrorState title="Could not load stats" description={error} onRetry={fetchStats} />
+          <ErrorState title="تعذر تحميل الإحصائيات" description={error} onRetry={fetchStats} />
         ) : stats && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              title="Total Members"
+              title="إجمالي الأعضاء"
               value={fmt(stats.totalMembers)}
               icon={<Users size={20} />}
-              trend={{ value: stats.newMembersThisMonth, label: 'new this month' }}
+              trend={{ value: stats.newMembersThisMonth, label: 'جديد هذا الشهر' }}
               variant="default"
             />
             <StatCard
-              title="Active Subscriptions"
+              title="الاشتراكات السارية"
               value={fmt(stats.activeSubscriptions)}
               icon={<CreditCard size={20} />}
-              trend={{ value: -stats.expiringSoon7Days, label: 'expiring in 7d' }}
+              trend={{ value: -stats.expiringSoon7Days, label: 'تنتهي خلال 7 أيام' }}
               variant="success"
             />
             <StatCard
-              title="Today's Revenue"
+              title="إيرادات اليوم"
               value={currency(stats.revenueToday)}
               icon={<TrendingUp size={20} />}
-              trend={{ value: 0, label: `${currency(stats.revenueThisMonth)} this month` }}
+              trend={{ value: 0, label: `${currency(stats.revenueThisMonth)} هذا الشهر` }}
               variant="primary"
             />
             <Link href="/attendance" className="block">
               <StatCard
-                title="Today's Attendance"
+                title="حضور اليوم"
                 value={fmt(stats.attendanceToday)}
                 icon={<Zap size={20} />}
                 variant="warning"
@@ -187,9 +187,9 @@ export default function DashboardPage() {
             {/* Revenue Chart */}
             <Card>
               <CardHeader>
-                <div>
-                  <p className="text-sm font-semibold text-[#FAFAFA]">Revenue (7 days)</p>
-                  <p className="text-xs text-[#71717A] mt-0.5">Daily payment totals</p>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-[#FAFAFA]">الإيرادات (آخر 7 أيام)</p>
+                  <p className="text-xs text-[#71717A] mt-0.5">إجمالي التحصيل اليومي بالجنيه المصري</p>
                 </div>
                 <TrendingUp size={16} className="text-[#F97316]" />
               </CardHeader>
@@ -207,8 +207,8 @@ export default function DashboardPage() {
                       tick={{ fill: '#71717A', fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(v) => v === 0 ? '0' : `${(v / 1000).toFixed(0)}k`}
-                      width={36}
+                      tickFormatter={(v) => v === 0 ? '0' : `${(v / 1000).toFixed(0)} ألف`}
+                      width={42}
                     />
                     <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: '#F9731610' }} />
                     <Bar dataKey="amount" fill="#F97316" radius={[4, 4, 0, 0]} />
@@ -220,9 +220,9 @@ export default function DashboardPage() {
             {/* Attendance Chart */}
             <Card>
               <CardHeader>
-                <div>
-                  <p className="text-sm font-semibold text-[#FAFAFA]">Attendance (7 days)</p>
-                  <p className="text-xs text-[#71717A] mt-0.5">Daily check-ins</p>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-[#FAFAFA]">حضور الأعضاء (آخر 7 أيام)</p>
+                  <p className="text-xs text-[#71717A] mt-0.5">عدد مرات الدخول اليومية</p>
                 </div>
                 <Users size={16} className="text-[#22C55E]" />
               </CardHeader>
@@ -260,40 +260,40 @@ export default function DashboardPage() {
         )}
 
         {/* ── Quick Actions + Activity Row ─────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-right">
 
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <p className="text-sm font-semibold text-[#FAFAFA]">Quick Actions</p>
+              <p className="text-sm font-semibold text-[#FAFAFA]">إجراءات سريعة</p>
             </CardHeader>
             <CardContent className="space-y-2 pt-3">
               <QuickAction
-                href="/members?action=new"
+                href="/members/new"
                 icon={<UserPlus size={18} />}
-                label="Add New Member"
-                description="Register a new gym member"
+                label="إضافة عضو جديد"
+                description="تسجيل مشترك جديد وإصدار كود"
                 color="primary"
               />
               <QuickAction
-                href="/payments?action=new"
+                href="/payments"
                 icon={<DollarSign size={18} />}
-                label="Record Payment"
-                description="Log a subscription payment"
+                label="تسجيل دفعة مالية"
+                description="تحصيل اشتراك نقدي أو إلكتروني"
                 color="success"
               />
               <QuickAction
-                href="/attendance?action=checkin"
+                href="/attendance"
                 icon={<ScanLine size={18} />}
-                label="Check In Member"
-                description="Record attendance entry"
+                label="تسجيل الحضور بالباركود"
+                description="فحص كود QR وتسجيل الدخول"
                 color="info"
               />
               <QuickAction
-                href="/subscriptions?action=new"
+                href="/subscriptions"
                 icon={<CreditCard size={18} />}
-                label="New Subscription"
-                description="Assign a plan to a member"
+                label="إدارة وتجديد الاشتراكات"
+                description="تجديد أو إسناد خطة جديدة لعضو"
                 color="warning"
               />
             </CardContent>
@@ -302,14 +302,14 @@ export default function DashboardPage() {
           {/* Recent Members */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <p className="text-sm font-semibold text-[#FAFAFA]">Recent Members</p>
-              <Link href="/members" className="text-xs text-[#F97316] hover:underline">View all</Link>
+              <p className="text-sm font-semibold text-[#FAFAFA]">أحدث الأعضاء المسجلين</p>
+              <Link href="/members" className="text-xs text-[#F97316] hover:underline">عرض الكل</Link>
             </CardHeader>
             {loading ? (
               <ListSkeleton rows={5} />
             ) : !stats?.recentMembers?.length ? (
               <CardContent>
-                <p className="text-sm text-[#71717A] py-6 text-center">No members yet</p>
+                <p className="text-sm text-[#71717A] py-6 text-center">لا يوجد أعضاء مسجلين بعد</p>
               </CardContent>
             ) : (
               <ul className="divide-y divide-[#27272A]">
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-[#71717A]">{m.memberCode}</p>
                       </div>
                       <Badge variant="neutral" className="text-[10px]">
-                        {new Date(m.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                        {new Date(m.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
                       </Badge>
                     </Link>
                   </li>
@@ -336,15 +336,15 @@ export default function DashboardPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertTriangle size={14} className="text-[#F59E0B]" />
-                <p className="text-sm font-semibold text-[#FAFAFA]">Expiring Soon</p>
+                <p className="text-sm font-semibold text-[#FAFAFA]">اشتراكات تنتهي قريباً</p>
               </div>
-              <Link href="/subscriptions?filter=expiring" className="text-xs text-[#F97316] hover:underline">View all</Link>
+              <Link href="/subscriptions" className="text-xs text-[#F97316] hover:underline">عرض الكل</Link>
             </CardHeader>
             {loading ? (
               <ListSkeleton rows={5} />
             ) : !stats?.expiringSubs?.length ? (
               <CardContent>
-                <p className="text-sm text-[#71717A] py-6 text-center">No expiring subscriptions 🎉</p>
+                <p className="text-sm text-[#71717A] py-6 text-center">لا توجد اشتراكات تنتهي قريباً 🎉</p>
               </CardContent>
             ) : (
               <ul className="divide-y divide-[#27272A]">
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-[#71717A] truncate">{sub.plan.name}</p>
                         </div>
                         <Badge variant={urgent ? 'danger' : 'warning'} className="text-[10px] whitespace-nowrap">
-                          {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days}d`}
+                          {days === 0 ? 'اليوم' : days === 1 ? 'غداً' : `خلال ${days} أيام`}
                         </Badge>
                       </Link>
                     </li>
@@ -372,14 +372,14 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Footer Refresh ────────────────────────────────────────── */}
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-start pt-2">
           <button
             onClick={fetchStats}
             disabled={loading}
             className="flex items-center gap-2 text-xs text-[#71717A] hover:text-[#FAFAFA] transition-colors disabled:opacity-40"
           >
             <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-            Refresh data
+            تحديث البيانات
           </button>
         </div>
 
@@ -409,11 +409,11 @@ function QuickAction({ href, icon, label, description, color }: {
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${c.icon}`}>
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-[#FAFAFA] leading-tight">{label}</p>
         <p className="text-xs text-[#71717A] truncate">{description}</p>
       </div>
-      <Clock size={12} className="text-[#3F3F46] ml-auto flex-shrink-0 group-hover:text-[#71717A] transition-colors" />
+      <Clock size={12} className="text-[#3F3F46] mr-auto flex-shrink-0 group-hover:text-[#71717A] transition-colors" />
     </Link>
   );
 }

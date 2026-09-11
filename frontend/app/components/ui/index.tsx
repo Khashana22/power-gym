@@ -117,9 +117,9 @@ interface ErrorStateProps {
   description?: string;
   onRetry?: () => void;
 }
-export function ErrorState({ message, title, description, onRetry }: ErrorStateProps) {
-  const displayTitle = title || 'Error';
-  const displayMsg = message || description || 'Something went wrong';
+export function ErrorState({ message, title, description, onRetry, retryLabel }: ErrorStateProps & { retryLabel?: string }) {
+  const displayTitle = title || 'خطأ';
+  const displayMsg = message || description || 'حدث خطأ ما أثناء تحميل البيانات';
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
       <div className="w-12 h-12 rounded-full bg-[#EF444415] border border-[#EF444430] flex items-center justify-center mb-4">
@@ -128,7 +128,7 @@ export function ErrorState({ message, title, description, onRetry }: ErrorStateP
       <p className="text-[#EF4444] font-semibold mb-1">{displayTitle}</p>
       <p className="text-sm text-[#A1A1AA] mb-3">{displayMsg}</p>
       {onRetry && (
-        <button onClick={onRetry} className="text-sm text-[#F97316] hover:underline">Retry</button>
+        <button onClick={onRetry} className="text-sm text-[#F97316] hover:underline">{retryLabel || 'إعادة المحاولة'}</button>
       )}
     </div>
   );
@@ -231,6 +231,8 @@ interface ConfirmDialogProps {
   description?: string;       // alias
   confirmLabel?: string;
   confirmText?: string;       // alias
+  cancelLabel?: string;
+  cancelText?: string;
   variant?: 'danger' | 'primary';
   confirmVariant?: 'destructive' | 'danger' | 'primary'; // alias
   loading?: boolean;
@@ -238,11 +240,12 @@ interface ConfirmDialogProps {
 }
 export function ConfirmDialog({
   open, isOpen, onClose, onOpenChange, onConfirm, title, message, description,
-  confirmLabel, confirmText, variant, confirmVariant, loading, isLoading
+  confirmLabel, confirmText, cancelLabel, cancelText, variant, confirmVariant, loading, isLoading
 }: ConfirmDialogProps) {
   const visible = open ?? isOpen ?? false;
-  const msg = message || description || 'Are you sure?';
-  const btnLabel = confirmLabel || confirmText || 'Confirm';
+  const msg = message || description || 'هل أنت متأكد؟';
+  const btnLabel = confirmLabel || confirmText || 'تأكيد';
+  const cancelBtn = cancelLabel || cancelText || 'إلغاء';
   const isDanger = variant === 'danger' || confirmVariant === 'destructive' || confirmVariant === 'danger' || (!variant && !confirmVariant);
   const busy = loading || isLoading;
   const handleClose = () => { onClose?.(); onOpenChange?.(false); };
@@ -252,7 +255,7 @@ export function ConfirmDialog({
       <p className="text-sm text-[#A1A1AA] mb-5">{msg}</p>
       <div className="flex gap-2 justify-end">
         <button onClick={handleClose} className="px-4 py-2 rounded-lg text-sm text-[#A1A1AA] hover:text-[#FAFAFA] hover:bg-[#27272A] transition-colors">
-          Cancel
+          {cancelBtn}
         </button>
         <button
           onClick={onConfirm}

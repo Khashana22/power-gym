@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { DashboardShell } from '../components/dashboard-shell';
@@ -19,14 +19,14 @@ interface Expense {
 }
 
 const CATEGORIES = [
-  { value: 'RENT',        label: 'Rent' },
-  { value: 'UTILITIES',   label: 'Utilities' },
-  { value: 'SALARIES',    label: 'Salaries' },
-  { value: 'EQUIPMENT',   label: 'Equipment' },
-  { value: 'MAINTENANCE', label: 'Maintenance' },
-  { value: 'MARKETING',   label: 'Marketing' },
-  { value: 'SUPPLIES',    label: 'Supplies' },
-  { value: 'OTHER',       label: 'Other' },
+  { value: 'RENT',        label: 'إيجار' },
+  { value: 'UTILITIES',   label: 'مرافق وفواتير' },
+  { value: 'SALARIES',    label: 'رواتب' },
+  { value: 'EQUIPMENT',   label: 'معدات وأجهزة' },
+  { value: 'MAINTENANCE', label: 'صيانة' },
+  { value: 'MARKETING',   label: 'تسويق وإعلانات' },
+  { value: 'SUPPLIES',    label: 'مستلزمات ونظافة' },
+  { value: 'OTHER',       label: 'أخرى' },
 ];
 
 const CAT_BADGE: Record<string, 'danger' | 'warning' | 'info' | 'primary' | 'neutral'> = {
@@ -36,7 +36,7 @@ const CAT_BADGE: Record<string, 'danger' | 'warning' | 'info' | 'primary' | 'neu
 };
 
 function fmt(n: number) {
-  return 'EGP ' + new Intl.NumberFormat('en-EG').format(n);
+  return new Intl.NumberFormat('ar-EG').format(n) + ' ج.م';
 }
 
 const now = new Date();
@@ -62,7 +62,7 @@ export default function ExpensesPage() {
       const data = await api.get<Expense[]>(`/expenses?month=${month}`);
       setExpenses(data);
     } catch (e: any) {
-      setError(e.message || 'Failed to load expenses');
+      setError(e.message || 'فشل في تحميل المصروفات');
     } finally {
       setLoading(false);
     }
@@ -74,10 +74,10 @@ export default function ExpensesPage() {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!form.title.trim()) errs.title = 'Title is required';
-    if (!form.category) errs.category = 'Category is required';
+    if (!form.title.trim()) errs.title = 'بند المصروف مطلوب';
+    if (!form.category) errs.category = 'الفئة مطلوبة';
     const amt = parseFloat(form.amount);
-    if (isNaN(amt) || amt <= 0) errs.amount = 'Amount must be greater than 0';
+    if (isNaN(amt) || amt <= 0) errs.amount = 'المبلغ يجب أن يكون أكبر من 0';
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -97,9 +97,9 @@ export default function ExpensesPage() {
       setModalOpen(false);
       setForm({ title: '', category: '', amount: '', notes: '' });
       setFormErrors({});
-      showToast({ title: 'Expense added', type: 'success' });
+      showToast({ title: 'تم الحفظ', message: 'تمت إضافة المصروف بنجاح', type: 'success' });
     } catch (e: any) {
-      showToast({ title: 'Failed to save', message: e.message, type: 'error' });
+      showToast({ title: 'خطأ', message: e.message || 'فشل في حفظ المصروف', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -112,9 +112,9 @@ export default function ExpensesPage() {
       await api.del(`/expenses/${deleteId}`);
       setExpenses(prev => prev.filter(e => e.id !== deleteId));
       setDeleteId(null);
-      showToast({ title: 'Expense deleted', type: 'success' });
+      showToast({ title: 'تم الحذف', message: 'تم حذف المصروف بنجاح', type: 'success' });
     } catch (e: any) {
-      showToast({ title: 'Failed to delete', message: e.message, type: 'error' });
+      showToast({ title: 'خطأ', message: e.message || 'فشل في حذف المصروف', type: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -127,13 +127,13 @@ export default function ExpensesPage() {
   }, {});
 
   return (
-    <DashboardShell title="Expenses">
+    <DashboardShell title="المصروفات">
       <PageHeader
-        title="Expenses"
-        description="Track and manage gym operational costs"
+        title="المصروفات"
+        description="تتبع وإدارة تكاليف تشغيل الجيم"
         action={
-          <Button onClick={() => setModalOpen(true)} icon={<Plus className="w-4 h-4" />}>
-            Add Expense
+          <Button onClick={() => setModalOpen(true)} className="bg-[#F97316] hover:bg-[#ea580c] text-white gap-2">
+            <Plus className="w-4 h-4" /> إضافة مصروف
           </Button>
         }
       />
@@ -145,7 +145,7 @@ export default function ExpensesPage() {
             <TrendingDown className="w-5 h-5 text-[#EF4444]" />
           </div>
           <div>
-            <p className="text-xs text-[#71717A] uppercase tracking-wide">Total This Month</p>
+            <p className="text-xs text-[#71717A] uppercase tracking-wide">إجمالي هذا الشهر</p>
             <p className="text-xl font-bold text-[#FAFAFA]">{fmt(totalAmount)}</p>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function ExpensesPage() {
             <Receipt className="w-5 h-5 text-[#A1A1AA]" />
           </div>
           <div>
-            <p className="text-xs text-[#71717A] uppercase tracking-wide">Transactions</p>
+            <p className="text-xs text-[#71717A] uppercase tracking-wide">عدد المعاملات</p>
             <p className="text-xl font-bold text-[#FAFAFA]">{expenses.length}</p>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function ExpensesPage() {
             <Filter className="w-5 h-5 text-[#F97316]" />
           </div>
           <div>
-            <p className="text-xs text-[#71717A] uppercase tracking-wide">Month Filter</p>
+            <p className="text-xs text-[#71717A] uppercase tracking-wide">فلتر الشهر</p>
             <input
               type="month"
               value={month}
@@ -179,7 +179,7 @@ export default function ExpensesPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <h3 className="text-sm font-semibold text-[#FAFAFA]">Expense Records</h3>
+              <h3 className="text-sm font-semibold text-[#FAFAFA]">سجل المصروفات</h3>
               <span className="text-xs text-[#71717A]">{month}</span>
             </CardHeader>
             <div className="divide-y divide-[#27272A]">
@@ -199,9 +199,9 @@ export default function ExpensesPage() {
               ) : expenses.length === 0 ? (
                 <EmptyState
                   icon={<Receipt className="w-10 h-10" />}
-                  title="No expenses this month"
-                  description="Add expenses to track your gym's operational costs."
-                  action={<Button onClick={() => setModalOpen(true)} variant="outline" size="sm">Add First Expense</Button>}
+                  title="لا توجد مصروفات لهذا الشهر"
+                  description="أضف مصروفاتك لتتبع التكاليف التشغيلية للجيم بدقة."
+                  action={<Button onClick={() => setModalOpen(true)} variant="outline" size="sm">أضف أول مصروف</Button>}
                 />
               ) : (
                 expenses.map(exp => (
@@ -216,7 +216,7 @@ export default function ExpensesPage() {
                           {CATEGORIES.find(c => c.value === exp.category)?.label || exp.category}
                         </Badge>
                         <span className="text-xs text-[#71717A]">
-                          {new Date(exp.createdAt).toLocaleDateString('en-EG', { month: 'short', day: 'numeric' })}
+                          {new Date(exp.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
                       {exp.notes && <p className="text-xs text-[#71717A] mt-0.5 truncate">{exp.notes}</p>}
@@ -226,6 +226,7 @@ export default function ExpensesPage() {
                       <button
                         onClick={() => setDeleteId(exp.id)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-[#71717A] hover:text-[#EF4444] hover:bg-[#EF444415] transition-colors"
+                        title="حذف"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -240,10 +241,10 @@ export default function ExpensesPage() {
         {/* Category breakdown */}
         <div className="space-y-4">
           <Card>
-            <CardHeader><h3 className="text-sm font-semibold text-[#FAFAFA]">By Category</h3></CardHeader>
+            <CardHeader><h3 className="text-sm font-semibold text-[#FAFAFA]">المصروفات حسب الفئة</h3></CardHeader>
             <CardContent className="space-y-3">
               {Object.keys(byCat).length === 0 ? (
-                <p className="text-sm text-[#71717A] text-center py-4">No data</p>
+                <p className="text-sm text-[#71717A] text-center py-4">لا توجد بيانات</p>
               ) : (
                 Object.entries(byCat)
                   .sort(([, a], [, b]) => b - a)
@@ -268,27 +269,27 @@ export default function ExpensesPage() {
       </div>
 
       {/* Add Expense Modal */}
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setFormErrors({}); }} title="Add Expense" size="md">
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setFormErrors({}); }} title="إضافة مصروف جديد" size="md">
         <div className="space-y-4">
           <Input
-            label="Title"
+            label="بند المصروف"
             required
             value={form.title}
             onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            placeholder="e.g. Monthly rent"
+            placeholder="مثال: الإيجار الشهري"
             error={formErrors.title}
           />
           <Select
-            label="Category"
+            label="الفئة"
             required
             value={form.category}
             onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
             options={CATEGORIES}
-            placeholder="Select category"
+            placeholder="اختر الفئة..."
             error={formErrors.category}
           />
           <Input
-            label="Amount (EGP)"
+            label="المبلغ (ج.م)"
             required
             type="number"
             min="0"
@@ -297,16 +298,18 @@ export default function ExpensesPage() {
             onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
             placeholder="0.00"
             error={formErrors.amount}
+            className="text-left font-mono"
+            dir="ltr"
           />
           <Textarea
-            label="Notes (optional)"
+            label="ملاحظات (اختياري)"
             value={form.notes}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-            placeholder="Additional details..."
+            placeholder="تفاصيل إضافية حول المصروف..."
           />
           <div className="flex gap-2 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button loading={saving} onClick={handleSave}>Save Expense</Button>
+            <Button variant="ghost" onClick={() => setModalOpen(false)}>إلغاء</Button>
+            <Button loading={saving} onClick={handleSave} className="bg-[#F97316] hover:bg-[#ea580c] text-white">حفظ المصروف</Button>
           </div>
         </div>
       </Modal>
@@ -315,9 +318,9 @@ export default function ExpensesPage() {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Delete Expense"
-        description="Are you sure you want to delete this expense? This cannot be undone."
-        confirmText="Delete"
+        title="حذف المصروف"
+        description="هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
         confirmVariant="destructive"
         isLoading={deleting}
       />

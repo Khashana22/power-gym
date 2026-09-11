@@ -3,7 +3,7 @@
 import React, { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Phone, Mail, Calendar, CreditCard, Clock, Download, Edit, Trash2, Plus, Activity } from 'lucide-react';
+import { ArrowRight, Phone, Mail, Calendar, CreditCard, Clock, Download, Edit, Trash2, Plus, Activity } from 'lucide-react';
 import { DashboardShell } from '../../components/dashboard-shell';
 import { Card, CardHeader, CardContent, Badge, Avatar, Spinner, ErrorState, EmptyState, Modal, ConfirmDialog, Skeleton, Divider } from '../../components/ui';
 import { Button } from '../../components/ui/button';
@@ -103,7 +103,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
         .catch(() => setAttendanceStats(null));
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to load member details');
+      setError(err.message || 'فشل في تحميل بيانات العضو');
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editForm.fullName.trim() || !editForm.phone.trim()) {
-      showToast({ title: 'Error', message: 'Name and phone are required', type: 'error' });
+      showToast({ title: 'خطأ', message: 'الاسم ورقم الهاتف مطلوبان', type: 'error' });
       return;
     }
     
@@ -125,9 +125,9 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
       const updated = await api.patch<Member>(`/members/${id}`, editForm);
       setMember(updated);
       setIsEditModalOpen(false);
-      showToast({ title: 'Success', message: 'Member updated successfully', type: 'success' });
+      showToast({ title: 'تم بنجاح', message: 'تم تحديث بيانات العضو بنجاح', type: 'success' });
     } catch (err: any) {
-      showToast({ title: 'Error', message: err.message || 'Failed to update member', type: 'error' });
+      showToast({ title: 'خطأ', message: err.message || 'فشل في تحديث بيانات العضو', type: 'error' });
     } finally {
       setEditLoading(false);
     }
@@ -137,10 +137,10 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
     try {
       setDeleteLoading(true);
       await api.del(`/members/${id}`);
-      showToast({ title: 'Success', message: 'Member deleted', type: 'success' });
+      showToast({ title: 'تم بنجاح', message: 'تم حذف العضو بنجاح', type: 'success' });
       router.push('/members');
     } catch (err: any) {
-      showToast({ title: 'Error', message: err.message || 'Failed to delete member', type: 'error' });
+      showToast({ title: 'خطأ', message: err.message || 'فشل في حذف العضو', type: 'error' });
       setDeleteLoading(false);
     }
   };
@@ -148,7 +148,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
   const handleAddSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) {
-      showToast({ title: 'Error', message: 'Please select a plan', type: 'error' });
+      showToast({ title: 'خطأ', message: 'يرجى اختيار خطة الاشتراك', type: 'error' });
       return;
     }
     
@@ -164,11 +164,11 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
         method: paymentMethod 
       });
       
-      showToast({ title: 'Success', message: 'Subscription added successfully', type: 'success' });
+      showToast({ title: 'تم بنجاح', message: 'تم إضافة الاشتراك بنجاح', type: 'success' });
       setIsSubModalOpen(false);
       fetchData();
     } catch (err: any) {
-      showToast({ title: 'Error', message: err.message || 'Failed to add subscription', type: 'error' });
+      showToast({ title: 'خطأ', message: err.message || 'فشل في إضافة الاشتراك', type: 'error' });
     } finally {
       setSubLoading(false);
     }
@@ -191,9 +191,18 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'نشط';
+      case 'EXPIRED': return 'منتهي';
+      case 'FROZEN': return 'مجمّد';
+      default: return status;
+    }
+  };
+
   if (loading) {
     return (
-      <DashboardShell title="Member Profile">
+      <DashboardShell title="الملف الشخصي للعضو">
         <div className="space-y-6">
           <Skeleton className="h-10 w-32" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -207,13 +216,13 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
 
   if (error || !member) {
     return (
-      <DashboardShell title="Member Profile">
+      <DashboardShell title="الملف الشخصي للعضو">
         <div className="mb-6">
           <Link href="/members" className="inline-flex items-center text-sm text-zinc-400 hover:text-white transition-colors">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Members
+            <ArrowRight className="h-4 w-4 ml-1" /> العودة إلى الأعضاء
           </Link>
         </div>
-        <ErrorState title="Error Loading Profile" description={error || 'Member not found'} onRetry={fetchData} />
+        <ErrorState title="خطأ في تحميل الملف الشخصي" description={error || 'العضو غير موجود'} onRetry={fetchData} />
       </DashboardShell>
     );
   }
@@ -222,17 +231,17 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(member.memberCode)}`;
 
   return (
-    <DashboardShell title="Member Profile">
+    <DashboardShell title="الملف الشخصي للعضو">
       <div className="mb-6 flex justify-between items-center">
         <Link href="/members" className="inline-flex items-center text-sm text-zinc-400 hover:text-white transition-colors">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Members
+          <ArrowRight className="h-4 w-4 ml-1" /> العودة إلى الأعضاء
         </Link>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
-            <Edit className="h-4 w-4 mr-2" /> Edit
+            <Edit className="h-4 w-4 ml-2" /> تعديل
           </Button>
           <Button variant="outline" size="sm" className="text-red-500 hover:bg-red-500/10 hover:text-red-500" onClick={() => setIsDeleteDialogOpen(true)}>
-            <Trash2 className="h-4 w-4 mr-2" /> Delete
+            <Trash2 className="h-4 w-4 ml-2" /> حذف
           </Button>
         </div>
       </div>
@@ -246,7 +255,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
                 <h2 className="text-xl font-semibold text-white">{member.fullName}</h2>
                 <div className="text-sm font-mono text-zinc-400 mt-1">{member.memberCode}</div>
                 <Badge variant={member.isActive ? "success" : "destructive"} className="mt-3">
-                  {member.isActive ? "Active" : "Inactive"}
+                  {member.isActive ? "نشط" : "غير نشط"}
                 </Badge>
               </div>
 
@@ -255,17 +264,17 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm text-zinc-300">
                   <Phone className="h-4 w-4 text-zinc-500" />
-                  {member.phone}
+                  <span dir="ltr">{member.phone}</span>
                 </div>
                 {member.email && (
                   <div className="flex items-center gap-3 text-sm text-zinc-300">
                     <Mail className="h-4 w-4 text-zinc-500" />
-                    {member.email}
+                    <span dir="ltr">{member.email}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-3 text-sm text-zinc-300">
                   <Calendar className="h-4 w-4 text-zinc-500" />
-                  Joined {new Date(member.createdAt).toLocaleDateString()}
+                  تاريخ الانضمام: {new Date(member.createdAt).toLocaleDateString('ar-EG')}
                 </div>
               </div>
             </CardContent>
@@ -273,11 +282,11 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
 
           <Card>
             <CardHeader>
-              <h3 className="font-medium text-white">QR Code</h3>
+              <h3 className="font-medium text-white">رمز QR للتعريف</h3>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
               <div className="bg-white p-2 rounded-lg mb-3">
-                <img src={qrUrl} alt="Member QR Code" className="w-32 h-32" />
+                <img src={qrUrl} alt="رمز QR للعضو" className="w-32 h-32" />
               </div>
               <p className="text-xs text-zinc-500 font-mono mb-3">{member.memberCode}</p>
               <Button 
@@ -285,8 +294,8 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
                 className="w-full" 
                 onClick={() => window.open(qrUrl, '_blank')}
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download QR Card
+                <Download className="h-4 w-4 ml-2" />
+                تحميل كود QR
               </Button>
             </CardContent>
           </Card>
@@ -296,7 +305,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
             <CardHeader>
               <h3 className="font-medium text-white flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
-                Attendance Stats
+                إحصائيات الحضور
               </h3>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -311,25 +320,25 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-zinc-900 rounded-lg p-3 text-center">
                       <p className="text-xl font-bold text-white">{attendanceStats.total}</p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">Total</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">الإجمالي</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3 text-center">
                       <p className="text-xl font-bold text-white">{attendanceStats.thisMonth}</p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">This Month</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">هذا الشهر</p>
                     </div>
                     <div className="bg-zinc-900 rounded-lg p-3 text-center">
                       <p className="text-xl font-bold text-white">{attendanceStats.thisYear}</p>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">This Year</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">هذا العام</p>
                     </div>
                   </div>
                   {attendanceStats.lastAttendanceDate && (
                     <div className="flex items-center gap-2 text-sm text-zinc-400 pt-1">
                       <Clock className="h-3.5 w-3.5" />
-                      Last visit:{' '}
+                      آخر زيارة:{' '}
                       <span className="text-zinc-300">
-                        {new Date(attendanceStats.lastAttendanceDate).toLocaleDateString()}
+                        {new Date(attendanceStats.lastAttendanceDate).toLocaleDateString('ar-EG')}
                         {' '}
-                        {new Date(attendanceStats.lastAttendanceTime!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(attendanceStats.lastAttendanceTime!).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   )}
@@ -344,18 +353,18 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
             <div className="p-6 border-b border-[#27272A] flex justify-between items-center">
               <h3 className="text-lg font-medium text-white flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-primary" />
-                Subscriptions
+                الاشتراكات
               </h3>
-              <Button onClick={() => setIsSubModalOpen(true)} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" /> Add Subscription
+              <Button onClick={() => setIsSubModalOpen(true)} size="sm" className="gap-2 bg-[#F97316] hover:bg-[#ea580c] text-white">
+                <Plus className="h-4 w-4" /> إضافة اشتراك
               </Button>
             </div>
             <CardContent className="p-0">
               {subscriptions.length === 0 ? (
                 <div className="p-8">
                   <EmptyState 
-                    title="No subscriptions" 
-                    description="This member doesn't have any subscriptions yet."
+                    title="لا توجد اشتراكات" 
+                    description="هذا العضو ليس لديه أي اشتراكات مسجلة حتى الآن."
                   />
                 </div>
               ) : (
@@ -367,11 +376,11 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
                         <div>
                           <div className="flex items-center gap-3 mb-1">
                             <h4 className="font-medium text-white">{sub.plan?.name}</h4>
-                            <Badge variant={getStatusBadge(sub.status)}>{sub.status}</Badge>
+                            <Badge variant={getStatusBadge(sub.status)}>{getStatusText(sub.status)}</Badge>
                           </div>
                           <div className="text-sm text-zinc-400 flex items-center gap-2">
                             <Calendar className="h-3 w-3" />
-                            {new Date(sub.startDate).toLocaleDateString()} - {new Date(sub.endDate).toLocaleDateString()}
+                            {new Date(sub.startDate).toLocaleDateString('ar-EG')} إلى {new Date(sub.endDate).toLocaleDateString('ar-EG')}
                           </div>
                         </div>
                         
@@ -379,7 +388,7 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-orange-500" />
                             <span className={daysRemaining < 7 ? "text-red-400 font-medium" : "text-zinc-300"}>
-                              {daysRemaining} days remaining
+                              {daysRemaining} يوم متبقي
                             </span>
                           </div>
                         )}
@@ -393,75 +402,80 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Member">
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="تعديل بيانات العضو">
         <form onSubmit={handleEdit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <label className="text-sm text-zinc-300">Full Name</label>
+            <label className="text-sm text-zinc-300">الاسم الكامل</label>
             <Input 
               value={editForm.fullName} 
               onChange={e => setEditForm({...editForm, fullName: e.target.value})}
               required
+              className="text-right"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-zinc-300">Phone</label>
+            <label className="text-sm text-zinc-300">رقم الهاتف</label>
             <Input 
               value={editForm.phone} 
               onChange={e => setEditForm({...editForm, phone: e.target.value})}
               required
+              className="text-left font-mono"
+              dir="ltr"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-zinc-300">Email</label>
+            <label className="text-sm text-zinc-300">البريد الإلكتروني</label>
             <Input 
               value={editForm.email} 
               onChange={e => setEditForm({...editForm, email: e.target.value})}
               type="email"
+              className="text-left font-mono"
+              dir="ltr"
             />
           </div>
           <div className="pt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={editLoading}>Cancel</Button>
-            <Button type="submit" disabled={editLoading}>
-              {editLoading && <Spinner className="h-4 w-4 mr-2" />} Save Changes
+            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={editLoading}>إلغاء</Button>
+            <Button type="submit" disabled={editLoading} className="bg-[#F97316] hover:bg-[#ea580c] text-white">
+              {editLoading && <Spinner className="h-4 w-4 ml-2" />} حفظ التعديلات
             </Button>
           </div>
         </form>
       </Modal>
 
-      <Modal isOpen={isSubModalOpen} onClose={() => setIsSubModalOpen(false)} title="Add Subscription">
+      <Modal isOpen={isSubModalOpen} onClose={() => setIsSubModalOpen(false)} title="إضافة اشتراك جديد">
         <form onSubmit={handleAddSubscription} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <label className="text-sm text-zinc-300">Membership Plan</label>
+            <label className="text-sm text-zinc-300">خطة الاشتراك</label>
             <select 
-              className="flex h-10 w-full rounded-md border border-[#27272A] bg-zinc-900 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+              className="flex h-10 w-full rounded-md border border-[#27272A] bg-zinc-900 px-3 py-2 text-sm ring-offset-background text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={selectedPlan} 
               onChange={e => setSelectedPlan(e.target.value)}
               required
             >
-              <option value="">Select a plan</option>
+              <option value="">اختر خطة الاشتراك...</option>
               {plans.map(p => (
-                <option key={p.id} value={p.id}>{p.name} - {p.price} EGP</option>
+                <option key={p.id} value={p.id}>{p.name} - {p.price} ج.م ({p.durationDays} يوم)</option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-zinc-300">Payment Method</label>
+            <label className="text-sm text-zinc-300">طريقة الدفع</label>
             <select 
-              className="flex h-10 w-full rounded-md border border-[#27272A] bg-zinc-900 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+              className="flex h-10 w-full rounded-md border border-[#27272A] bg-zinc-900 px-3 py-2 text-sm ring-offset-background text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={paymentMethod} 
               onChange={e => setPaymentMethod(e.target.value)}
               required
             >
-              <option value="CASH">Cash</option>
-              <option value="VISA">Visa</option>
-              <option value="INSTAPAY">InstaPay</option>
-              <option value="VODAFONE_CASH">Vodafone Cash</option>
+              <option value="CASH">كاش (نقدي)</option>
+              <option value="VISA">فيزا / بطاقة بنكية</option>
+              <option value="INSTAPAY">إنستاباي (InstaPay)</option>
+              <option value="VODAFONE_CASH">فودافون كاش (Vodafone Cash)</option>
             </select>
           </div>
           <div className="pt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setIsSubModalOpen(false)} disabled={subLoading}>Cancel</Button>
-            <Button type="submit" disabled={subLoading}>
-              {subLoading && <Spinner className="h-4 w-4 mr-2" />} Create Subscription
+            <Button type="button" variant="outline" onClick={() => setIsSubModalOpen(false)} disabled={subLoading}>إلغاء</Button>
+            <Button type="submit" disabled={subLoading} className="bg-[#F97316] hover:bg-[#ea580c] text-white">
+              {subLoading && <Spinner className="h-4 w-4 ml-2" />} تأكيد الاشتراك
             </Button>
           </div>
         </form>
@@ -471,9 +485,9 @@ export default function MemberProfilePage({ params }: { params: Promise<{ id: st
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Member"
-        description="Are you sure you want to delete this member? All their active subscriptions and data will be removed. This action cannot be undone."
-        confirmText="Delete Member"
+        title="حذف العضو"
+        description="هل أنت متأكد من حذف هذا العضو؟ سيتم حذف جميع اشتراكاته وبياناته نهائياً. لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف العضو"
         confirmVariant="destructive"
         isLoading={deleteLoading}
       />
