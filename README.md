@@ -1,7 +1,8 @@
-﻿<div align="center">
+<div align="center">
 
 # 🏋️‍♂️ POWER GYM MANAGEMENT SYSTEM
-### نظام إدارة الصالات الرياضية والاشتراكات المتكامل والحديث
+
+### A Modern, Full-Stack Gym Management Platform
 
 [![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-power--gym--khashana.vercel.app-F97316?style=for-the-badge&logo=vercel&logoColor=white)](https://power-gym-khashana.vercel.app)
 [![API Status](https://img.shields.io/badge/API_Status-Online-22C55E?style=for-the-badge&logo=fastapi&logoColor=white)](https://backend-zeta-sage-77.vercel.app/health/db)
@@ -15,93 +16,93 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma_ORM-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL Neon](https://img.shields.io/badge/Neon_PostgreSQL-00E599?style=flat-square&logo=postgresql&logoColor=black)](https://neon.tech/)
-[![Meta WhatsApp](https://img.shields.io/badge/WhatsApp_Cloud_API-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://developers.facebook.com/docs/whatsapp/cloud-api)
-[![RTL Arabic](https://img.shields.io/badge/Interface-100%25_Arabic_RTL-F97316?style=flat-square)](https://power-gym-khashana.vercel.app)
+[![WhatsApp API](https://img.shields.io/badge/WhatsApp_Cloud_API-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://developers.facebook.com/docs/whatsapp/cloud-api)
+[![Arabic RTL](https://img.shields.io/badge/Interface-100%25_Arabic_RTL-F97316?style=flat-square)](https://power-gym-khashana.vercel.app)
 
 <p align="center">
-  <b>منظومة سحابية متكاملة واحترافية لإدارة الجيم: تسجيل الأعضاء، الحضور الذكي برمز QR، تتبع الاشتراكات، تحصيل المدفوعات بالجنيه المصري (ج.م)، رصد المصروفات التشغيلية، التقارير المالية التفاعلية، وإرسال تنبيهات واتساب الآلية.</b>
+  <b>A complete cloud-based gym management solution: member registration, smart QR attendance, subscription tracking, multi-gateway payments in Egyptian Pounds (EGP), expense monitoring, financial analytics, and automated WhatsApp notifications.</b>
 </p>
 
-[🌐 تجربة النظام مباشرة (Live Demo)](https://power-gym-khashana.vercel.app) • [📖 المميزات](#-المميزات-الرئيسية--key-features) • [🏛️ هيكلية النظام](#-هيكلية-النظام--system-architecture) • [🚀 التشغيل المحلي](#-التشغيل-والتثبيت-المحلي--getting-started) • [👨‍💻 المطور والمالك](#-فريق-العمل-والمالك--credits)
+[🌐 Live Demo](https://power-gym-khashana.vercel.app) • [⚡ Features](#-key-features) • [🏛️ Architecture](#-system-architecture) • [🚀 Getting Started](#-getting-started) • [📡 API Reference](#-api-reference) • [👨‍💻 Credits](#-credits)
 
 </div>
 
 ---
 
-## 🌟 الوصول السريع وبيانات الدخول التجريبية (Quick Access)
+## 🌟 Quick Access & Demo Credentials
 
-يمكنك تجربة النظام كاملاً الآن مباشرة عبر الرابط السحابي:
+Try the full system live right now:
 
-| الخاصية | القيمة |
+| Property | Value |
 | :--- | :--- |
-| 🌐 **رابط المنظومة المباشر** | [https://power-gym-khashana.vercel.app](https://power-gym-khashana.vercel.app) |
-| 🌐 **دومين بديل** | [https://powergymkhashana.vercel.app](https://powergymkhashana.vercel.app) |
-| 📧 **البريد الإلكتروني التجريبي** | `admin@powergym.com` |
-| 🔑 **كلمة المرور** | `Admin@2026` |
-| 👤 **اسم المالك** | **محمد موسى** |
-| 🛡️ **الصلاحية** | OWNER (مالك ومدير النظام) |
-| 💱 **العملة المعتمدة** | الجنيه المصري (**ج.م** - EGP) |
+| 🌐 **Primary Live URL** | [https://power-gym-khashana.vercel.app](https://power-gym-khashana.vercel.app) |
+| 🌐 **Alternative Domain** | [https://powergymkhashana.vercel.app](https://powergymkhashana.vercel.app) |
+| 📧 **Demo Email** | `admin@powergym.com` |
+| 🔑 **Password** | `Admin@2026` |
+| 👤 **Gym Owner** | **Mohamed Mousa** |
+| 🛡️ **Role** | OWNER (Full System Access) |
+| 💱 **Currency** | Egyptian Pound (**EGP** - ج.م) |
 
 ---
 
-## ⚡ المميزات الرئيسية (Key Features)
+## ⚡ Key Features
 
-### 1. 📱 نظام تسجيل الحضور الذكي السريع (QR Code Check-in)
-- مسح سريع ومباشر لأكواد QR الخاصة بالأعضاء عبر الكاميرا أو القارئ الضوئي اللاسلكي.
-- إدخال يدوي ذكي يدعم اختصارات البحث الفوري.
-- تحقق فوري وآلي من صلاحية الاشتراك (نشط / منتهي / مجمّد).
-- تنبيهات ملونة وصوتية واضحة للاستقبال (أخضر: دخول ناجح، أحمر: اشتراك منتهي، أزرق: تم التسجيل اليوم مسبقاً).
-- عدّاد لحظي لحضور اليوم مع سجل زمني دقيق لوقت الدخول.
+### 1. 📱 Smart QR Code Check-in System
+- Instant QR code scanning via camera or wireless barcode scanner.
+- Smart manual input with live search shortcuts.
+- Automatic real-time subscription validation (Active / Expired / Frozen).
+- Color-coded and sound alerts at reception (Green: success, Red: expired, Blue: already checked in today).
+- Live daily attendance counter with precise check-in timestamps.
 
-### 2. 👥 إدارة الأعضاء والملفات الشخصية (Member Management)
-- تسجيل سريع للأعضاء الجدد مع التحقق التلقائي من صحة أرقام الهواتف المصرية (`01x`).
-- توليد تلقائي لكود العضوية الفريد (مثال: `PG-1001`) ورمز QR المخصص لكل لاعب.
-- إمكانية طباعة أو تنزيل بطاقة العضوية بضغطة زر واحدة.
-- بطاقة ملف شخصي شاملة: بيانات الاتصال، تاريخ الانضمام، إحصائيات الحضور (الإجمالي، هذا الشهر، هذا العام، وآخر زيارة)، وسجل الاشتراكات.
+### 2. 👥 Member Management & Profiles
+- Fast member registration with automatic validation of Egyptian mobile numbers (`01x` format).
+- Auto-generated unique member code (e.g. `PG-1001`) and personalized QR code for every member.
+- One-click membership card printing and downloading.
+- Comprehensive profile card: contact info, join date, attendance statistics (total, this month, this year, last visit), and full subscription history.
 
-### 3. 💳 إدارة الاشتراكات والخطط (Subscriptions & Membership Plans)
-- تخصيص خطط العضوية المتعددة: يومي، شهري، 3 شهور، 6 شهور، أو سنوي مع تحديد الأسعار بالجنيه المصري.
-- متابعة مدة الاشتراكات مع حساب تلقائي للأيام المتبقية وتنبيهات بصرية باللون الأصفر والأحمر عند اقتراب الانتهاء.
-- تجديد الاشتراك بضغطة زر واحدة مع تحديد طريقة الدفع والمبلغ المستلم تلقائياً.
+### 3. 💳 Subscriptions & Membership Plans
+- Flexible membership plan configuration: daily, monthly, 3-month, 6-month, or annual — with EGP pricing.
+- Automatic remaining-days calculation with visual yellow/red alerts as expiry approaches.
+- One-click subscription renewal with payment method and amount auto-filled.
 
-### 4. 💵 تسجيل وتحصيل المدفوعات (Multi-Gateway Payments)
-- دعم كامل لأشهر طرق الدفع في السوق المصري:
-  - 💵 **كاش (نقدي)**
-  - 💳 **فيزا وبطاقات بنكية**
-  - ⚡ **إنستاباي (InstaPay)**
-  - 📱 **فودافون كاش ومحافظ المحمول (Vodafone Cash)**
-- ربط كل عملية دفع برقم اشتراك العضو مع تاريخ وساعة الدفع.
+### 4. 💵 Multi-Gateway Payment Collection
+- Full support for Egypt's most popular payment methods:
+  - 💵 **Cash**
+  - 💳 **Visa / Bank Cards**
+  - ⚡ **InstaPay**
+  - 📱 **Vodafone Cash & Mobile Wallets**
+- Every payment linked to a member's subscription ID with date and timestamp.
 
-### 5. 📉 رصد وإدارة المصروفات التشغيلية (Expense Tracking)
-- تتبع دقيق لكافة تكاليف وتشغيل الصالة الرياضية:
-  - الإيجار الشهري، فواتير المرافق (كهرباء، مياه، غاز)، رواتب المدربين والعمال، شراء وتحديث الأجهزة، الصيانة الدورية، التسويق والإعلانات، ومستلزمات النظافة.
-- شريط مرئي يوضح توزيع المصاريف حسب الفئة ونسبتها المئوية من إجمالي الشهر.
-- فلاتر شهرية مرنة لعرض ومراجعة نفقات أي شهر سابق.
+### 5. 📉 Operational Expense Tracking
+- Precise tracking of all gym running costs:
+  - Monthly rent, utility bills (electricity, water, gas), trainer/staff salaries, equipment purchases & upgrades, maintenance, marketing & ads, and cleaning supplies.
+- Visual breakdown bar showing expense distribution by category and percentage of monthly total.
+- Flexible monthly filters to review and audit expenses from any past month.
 
-### 6. 📊 لوحة تقارير وإحصائيات مالية تفاعلية (Analytics & Reports)
-- رسوم بيانية تفاعلية باستخدام **Recharts** تعرض اتجاه الإيرادات اليومية ومتوسط الدخل اليومي.
-- تحليل نسب الدخل حسب وسيلة الدفع (كاش، فيزا، إنستاباي، فودافون كاش).
-- رسوم بيانية ترصد معدلات الحضور اليومية والأعضاء الجدد.
-- تصدير فوري للتقارير بصيغة **PDF** و **Excel**.
+### 6. 📊 Interactive Financial Analytics & Reports
+- Interactive charts powered by **Recharts** displaying daily revenue trends and average daily income.
+- Income breakdown by payment method (Cash, Visa, InstaPay, Vodafone Cash).
+- Charts tracking daily attendance rates and new member registrations.
+- Instant export to **PDF** and **Excel**.
 
-### 7. 💬 تكامل واتساب للرسائل الآلية (Meta WhatsApp Cloud API)
-- نظام آلي لإرسال رسائل الترحيب عند الاشتراك الجديد مع بيانات العضوية.
-- تذكيرات آلية قبل انتهاء الاشتراك (قبل 7 أيام، ويوم الانتهاء).
-- إشعار فوري عند تجديد الاشتراك وتأكيد استلام الدفعة.
-- سجل إشعارات كامل يوضح حالة الرسالة (تم الإرسال / قيد الانتظار / فشلت).
+### 7. 💬 WhatsApp Automation (Meta Cloud API)
+- Auto welcome messages on new subscription with full membership details.
+- Automated reminders before subscription expiry (7 days before, and on the expiry day).
+- Instant renewal confirmation and payment receipt notification.
+- Full notification log showing message delivery status (Sent / Pending / Failed).
 
-### 8. 🌐 واجهة عربية كاملة 100% (Arabic Native & Modern Dark RTL)
-- تصميم داكن فخم ومريح للعين يعتمد على لوحة ألوان احترافية (`#09090B`, `#18181B`, `#F97316`).
-- دعم أصيل للاتجاه من اليمين لليسار (RTL) مع خط **Cairo** المتميز.
+### 8. 🌐 100% Arabic Native Interface (RTL Dark Theme)
+- Sleek, eye-friendly dark theme using a professional color palette (`#09090B`, `#18181B`, `#F97316`).
+- Native Right-to-Left (RTL) layout with the elegant **Cairo** Arabic typeface.
 
 ---
 
-## 🏛️ هيكلية النظام (System Architecture)
+## 🏛️ System Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Client ["🖥️ Client Layer (المستخدم والمتصفح)"]
-        Browser["مكتب الاستقبال / الإدارة / الموبايل\n(Cairo Font - RTL Dark Theme)"]
+    subgraph Client ["🖥️ Client Layer"]
+        Browser["Reception / Management / Mobile\n(Cairo Font - RTL Dark Theme)"]
     end
 
     subgraph Frontend ["⚡ Frontend (Next.js 16 App Router)"]
@@ -139,7 +140,7 @@ flowchart TD
 
 ---
 
-## 🗄️ مخطط قاعدة البيانات (Entity-Relationship Diagram)
+## 🗄️ Database Schema (Entity-Relationship Diagram)
 
 ```mermaid
 erDiagram
@@ -213,142 +214,144 @@ erDiagram
 
 ---
 
-## 💻 حزمة التقنيات المستخدمة (Tech Stack)
+## 💻 Tech Stack
 
-| الطبقة (Layer) | التقنية (Technology) | الوصف والدور |
+| Layer | Technology | Description |
 | :--- | :--- | :--- |
-| **Frontend Framework** | [Next.js 16](https://nextjs.org/) (App Router) | أحدث إصدارات Next.js مع معمارية Turbopack و Server Components |
-| **Language** | [TypeScript 5](https://www.typescriptlang.org/) | نمط كتابة كود عالي الأمان مع Typed DTOs و Interfaces كاملة |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | تصميم عصري داكن سريع الاستجابة ويدعم RTL |
-| **Typography** | [Google Fonts Cairo](https://fonts.google.com/specimen/Cairo) | خط عربي رسمي وأنيق مصمم خصيصاً للتطبيقات العربية |
-| **UI Components & Icons** | [Lucide React](https://lucide.dev/) | أيقونات متناسقة واحترافية لكافة العمليات |
-| **Charts** | [Recharts](https://recharts.org/) | رسوم بيانية تفاعلية لمتابعة الإيرادات والنمو اليومي |
-| **Backend Framework** | [NestJS 10](https://nestjs.com/) | إطار عمل مؤسسي قوي بنظام الـ Modules و Dependency Injection |
-| **ORM** | [Prisma ORM](https://www.prisma.io/) | نمذجة الجداول واستعلامات قاعدة البيانات فائقة السرعة |
-| **Database** | [Neon PostgreSQL](https://neon.tech/) | قاعدة بيانات سحابية Serverless عالية الأداء |
-| **Authentication** | JWT & HttpOnly Cookies | نظام تشفير وتوثيق آمن مع عزل الصلاحيات (RBAC) |
-| **Cloud Hosting** | [Vercel](https://vercel.com/) | نشر سحابي فوري للواجهة والسيرفر مع تفعيل الـ Edge CDN |
-| **Messaging API** | [Meta WhatsApp Cloud API](https://developers.facebook.com/) | إرسال رسائل وتنبيهات واتساب الرسمية |
+| **Frontend Framework** | [Next.js 16](https://nextjs.org/) (App Router) | Latest Next.js with Turbopack & Server Components architecture |
+| **Language** | [TypeScript 5](https://www.typescriptlang.org/) | Fully typed codebase with strict DTOs and interfaces |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Modern dark responsive design with native RTL support |
+| **Typography** | [Google Fonts Cairo](https://fonts.google.com/specimen/Cairo) | Professional Arabic font designed for digital applications |
+| **UI Icons** | [Lucide React](https://lucide.dev/) | Consistent, professional icon set for all operations |
+| **Charts** | [Recharts](https://recharts.org/) | Interactive charts for revenue tracking and daily growth |
+| **Backend Framework** | [NestJS 10](https://nestjs.com/) | Enterprise-grade framework with Modules & Dependency Injection |
+| **ORM** | [Prisma ORM](https://www.prisma.io/) | Type-safe database modeling and high-performance queries |
+| **Database** | [Neon PostgreSQL](https://neon.tech/) | Serverless cloud PostgreSQL database with high availability |
+| **Authentication** | JWT & HttpOnly Cookies | Secure encryption and auth with role-based access control (RBAC) |
+| **Cloud Hosting** | [Vercel](https://vercel.com/) | Instant serverless deployment for both frontend and backend with Edge CDN |
+| **Messaging API** | [Meta WhatsApp Cloud API](https://developers.facebook.com/) | Official WhatsApp automated messaging and notifications |
 
 ---
 
-## 📁 هيكل مجلدات المشروع (Directory Structure)
+## 📁 Project Directory Structure
 
 ```text
 power-gym/
-├── .github/                      # إعدادات مجتمع GitHub ومسارات العمل
-│   ├── workflows/ci.yml          # مسار الفحص والبناء الآلي المستمر (CI)
-│   ├── ISSUE_TEMPLATE/           # نماذج الإبلاغ عن الأخطاء وطلب الميزات
-│   └── PULL_REQUEST_TEMPLATE.md  # نموذج طلبات السحب والمراجعة
-├── backend/                      # سيرفر الـ API ونظام إدارة البيانات (NestJS)
+├── .github/                      # GitHub community & workflow configuration
+│   ├── workflows/ci.yml          # Automated CI — build & health check on every push
+│   ├── ISSUE_TEMPLATE/           # Bug report and feature request templates
+│   └── PULL_REQUEST_TEMPLATE.md  # Pull request review template
+├── backend/                      # REST API server & data management (NestJS)
 │   ├── prisma/
-│   │   ├── schema.prisma         # مخطط قاعدة البيانات (Prisma Schema)
-│   │   └── migrations/           # سجل التحديثات والـ Migrations
+│   │   ├── schema.prisma         # Database schema definition
+│   │   └── migrations/           # Migration history and changelogs
 │   └── src/
-│       ├── auth/                 # نظام تسجيل الدخول وتوليد التوكن
-│       ├── members/              # إدارة الأعضاء وأكواد الـ QR
-│       ├── membership-plans/     # خطط الاشتراك والأسعار
-│       ├── subscriptions/        # تتبع الاشتراكات وتجديدها
-│       ├── attendance/           # فحص الدخول والباركود
-│       ├── payments/             # سندات القبض والمدفوعات
-│       ├── expenses/             # تسجيل وتصنيف المصروفات
-│       ├── dashboard/            # إحصائيات لوحة التحكم
-│       ├── reports/              # مولد تقارير الإيرادات والنشاط
-│       └── notifications/        # تكامل رسائل واتساب السحابية
-├── frontend/                     # واجهة المستخدم وتجربة الاستخدام (Next.js 16)
+│       ├── auth/                 # Login system and JWT token generation
+│       ├── members/              # Member management and QR codes
+│       ├── membership-plans/     # Subscription plans and pricing
+│       ├── subscriptions/        # Subscription tracking and renewals
+│       ├── attendance/           # Check-in and QR scanning
+│       ├── payments/             # Payment receipts and records
+│       ├── expenses/             # Expense registration and categorization
+│       ├── dashboard/            # Control panel statistics
+│       ├── reports/              # Revenue and activity report generator
+│       └── notifications/        # WhatsApp Cloud API integration
+├── frontend/                     # User interface and experience (Next.js 16)
 │   ├── app/
-│   │   ├── (dashboard)/          # صفحات لوحة التحكم الرئيسية
-│   │   ├── attendance/           # ماسح الحضور السريع الذكي
-│   │   ├── members/              # شاشات عرض وتسجيل وتعديل الأعضاء
-│   │   ├── subscriptions/        # جدول الاشتراكات وتجديد الباقات
-│   │   ├── plans/                # بطاقات خطط الأسعار بالج.م
-│   │   ├── payments/             # شاشة تحصيل المدفوعات
-│   │   ├── expenses/             # شاشة إدارة المصروفات الشهرية
-│   │   ├── reports/              # التقارير والرسوم البيانية
-│   │   ├── calendar/             # التقويم الشهري التفاعلي
-│   │   ├── notifications/        # سجل رسائل واتساب
-│   │   ├── settings/             # إعدادات الجيم والمالك
-│   │   └── components/           # عناصر التصميم القابلة لإعادة الاستخدام
-├── docker-compose.yml            # إعداد الحاويات والتشغيل المحلي
-├── CONTRIBUTING.md               # إرشادات المساهمة والتطوير
-├── SECURITY.md                   # سياسة الأمان والإبلاغ عن الثغرات
-└── LICENSE                       # رخصة الاستخدام (MIT License)
+│   │   ├── (dashboard)/          # Main dashboard pages
+│   │   ├── attendance/           # Smart QR attendance scanner
+│   │   ├── members/              # Member view, register, and edit screens
+│   │   ├── subscriptions/        # Subscription table and plan renewals
+│   │   ├── plans/                # EGP pricing plan cards
+│   │   ├── payments/             # Payment collection screen
+│   │   ├── expenses/             # Monthly expense management screen
+│   │   ├── reports/              # Reports and interactive charts
+│   │   ├── calendar/             # Interactive monthly calendar
+│   │   ├── notifications/        # WhatsApp message log
+│   │   ├── settings/             # Gym and owner settings
+│   │   └── components/           # Reusable design components
+├── docker-compose.yml            # Container setup for local development
+├── CONTRIBUTING.md               # Contribution and development guidelines
+├── SECURITY.md                   # Security policy and vulnerability reporting
+└── LICENSE                       # MIT License
 ```
 
 ---
 
-## 🚀 التشغيل والتثبيت المحلي (Getting Started)
+## 🚀 Getting Started
 
-### المتطلبات الأساسية (Prerequisites):
-- تثبيت **Node.js** (الإصدار 20 أو 22 LTS).
-- تثبيت **Git**.
-- قاعدة بيانات **PostgreSQL** محلياً أو سحابياً عبر Neon.
+### Prerequisites
+- **Node.js** v20 or v22 LTS installed
+- **Git** installed
+- **PostgreSQL** database — local or cloud via [Neon](https://neon.tech/)
 
-### 1. استنساخ المستودع (Clone Repository):
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/Khashana22/power-gym.git
 cd power-gym
 ```
 
-### 2. إعداد وتشغيل السيرفر (Backend):
+### 2. Setup & Run the Backend
 ```bash
 cd backend
 npm install
 
-# إعداد ملف البيئة
+# Configure environment variables
 cp .env.example .env
-# تأكد من وضع رابط قاعدة البيانات DATABASE_URL و JWT_SECRET في ملف .env
+# Set DATABASE_URL and JWT_SECRET in your .env file
 
-# تطبيق الـ Migrations وتوليد عميل Prisma
+# Apply migrations and generate Prisma client
 npx prisma migrate deploy
 npx prisma generate
 
-# تشغيل السيرفر في وضع التطوير
+# Start the development server
 npm run start:dev
 ```
-السيرفر سيعمل على: `http://localhost:3001`
+Backend will run at: `http://localhost:3001`
 
-### 3. إعداد وتشغيل الواجهة (Frontend):
+### 3. Setup & Run the Frontend
 ```bash
 cd ../frontend
 npm install
 
-# تشغيل واجهة الويب
+# Start the web interface
 npm run dev
 ```
-الموقع سيعمل على: `http://localhost:3000`
+Frontend will run at: `http://localhost:3000`
 
 ---
 
-## 📡 نظرة سريعة على الـ REST API (Endpoints)
+## 📡 API Reference
 
-| الوحدة | الطريقة (Method) | المسار (Endpoint) | الوظيفة |
+| Module | Method | Endpoint | Description |
 | :--- | :---: | :--- | :--- |
-| **Auth** | `POST` | `/auth/login` | تسجيل الدخول وتوليد رمز JWT |
-| **Auth** | `GET` | `/auth/me` | استرجاع بيانات المستخدم الحالي |
-| **Members** | `GET` | `/members` | عرض قائمة الأعضاء المسجلين |
-| **Members** | `POST` | `/members` | إضافة عضو جديد مع توليد QR Token |
-| **Members** | `GET` | `/members/:id` | عرض الملف الشخصي الكامل للعضو |
-| **Attendance** | `POST` | `/attendance/checkin` | تسجيل حضور العضو عبر الـ QR |
-| **Subscriptions**| `GET` | `/subscriptions/member/:id` | عرض اشتراكات العضو |
-| **Subscriptions**| `POST` | `/subscriptions` | إنشاء وتفعيل اشتراك جديد |
-| **Payments** | `POST` | `/payments` | تسجيل دفعة مالية (كاش، فيزا، إنستاباي، فودافون كاش) |
-| **Expenses** | `GET` | `/expenses?month=YYYY-MM` | عرض مصروفات الشهر المحدد |
-| **Expenses** | `POST` | `/expenses` | تسجيل مصروف تشغيلي جديد |
-| **Reports** | `GET` | `/reports/revenue` | تقرير الإيرادات والمدفوعات اليومية |
-| **Reports** | `GET` | `/reports/attendance` | إحصائيات الحضور والرواد |
+| **Auth** | `POST` | `/auth/login` | Login and generate JWT token |
+| **Auth** | `GET` | `/auth/me` | Retrieve current user data |
+| **Members** | `GET` | `/members` | List all registered members |
+| **Members** | `POST` | `/members` | Add a new member with QR Token |
+| **Members** | `GET` | `/members/:id` | Get a member's full profile |
+| **Members** | `PATCH` | `/members/:id` | Update member information |
+| **Members** | `DELETE` | `/members/:id` | Soft-delete a member |
+| **Attendance** | `POST` | `/attendance/checkin` | Log member check-in via QR |
+| **Subscriptions** | `GET` | `/subscriptions/member/:id` | Get member's subscriptions |
+| **Subscriptions** | `POST` | `/subscriptions` | Create and activate a new subscription |
+| **Payments** | `POST` | `/payments` | Record a payment (Cash, Visa, InstaPay, Vodafone Cash) |
+| **Expenses** | `GET` | `/expenses?month=YYYY-MM` | Get expenses for a specific month |
+| **Expenses** | `POST` | `/expenses` | Log a new operational expense |
+| **Reports** | `GET` | `/reports/revenue` | Revenue and daily payment report |
+| **Reports** | `GET` | `/reports/attendance` | Attendance and visitor statistics |
 
 ---
 
-## 👨‍💻 فريق العمل والمالك (Credits & Attribution)
+## 👨‍💻 Credits
 
 <div align="center">
 
-| المالك (Gym Owner) | المطور الرئيسي (Lead Developer) |
+| Gym Owner | Lead Developer |
 | :---: | :---: |
-| **محمد موسى** | **Sayed Khashana** |
-| مالك صالة POWER GYM الرياضية | مهندس برمجيات ومطور ومصمم النظام |
-| إدارة الصالة والعمليات التشغيلية | 📞 هاتف / واتساب: `01559666564` |
+| **Mohamed Mousa** | **Sayed Khashana** |
+| Owner of POWER GYM | Software Engineer & System Architect |
+| Gym Operations & Management | 📞 Phone / WhatsApp: `01559666564` |
 | — | 🐙 GitHub: [@Khashana22](https://github.com/Khashana22) |
 
 </div>
@@ -356,5 +359,5 @@ npm run dev
 ---
 
 <div align="center">
-  <sub>نظام إدارة الصالات الرياضية الاحترافي POWER GYM. جميع الحقوق محفوظة &copy; 2026</sub>
+  <sub>POWER GYM Professional Management System. All Rights Reserved &copy; 2026</sub>
 </div>
