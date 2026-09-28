@@ -26,40 +26,102 @@ export class ReportsService {
   async getRevenueReport(gymId: string, filter: ReportFilter) {
     const { start, end } = this.getDateRange(filter);
 
-    // Daily revenue breakdown
-    const payments = await this.prisma.payment.findMany({
-      where: {
-        paidAt: { gte: start, lte: end },
-        subscription: { member: { gymId } },
-      },
-      include: {
-        subscription: {
-          include: {
-            member: { select: { fullName: true, memberCode: true } },
-            plan: { select: { name: true } },
+    // Daily revenue breakdown: payments + item sales
+    const [payments, itemSales] = await Promise.all([
+      this.prisma.payment.findMany({
+        where: {
+          paidAt: { gte: start, lte: end },
+          subscription: { member: { gymId } },
+        },
+        include: {
+          subscription: {
+            include: {
+              member: { select: { fullName: true, memberCode: true } },
+              plan: { select: { name: true } },
+            },
           },
         },
-      },
-      orderBy: { paidAt: 'desc' },
-    });
+        orderBy: { paidAt: 'desc' },
+      }),
+      this.prisma.itemSale.findMany({
+        where: {
+          gymId,
+          createdAt: { gte: start, lte: end },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
 
     // Group by day
     const byDay: Record<string, number> = {};
     const byMethod: Record<string, number> = {};
-    let total = 0;
+    let subscriptionsTotal = 0;
+    let itemSalesTotal = 0;
 
     for (const p of payments) {
       const day = p.paidAt.toISOString().split('T')[0];
       byDay[day] = (byDay[day] || 0) + p.amount;
       byMethod[p.method] = (byMethod[p.method] || 0) + p.amount;
-      total += p.amount;
+      subscriptionsTotal += p.amount;
     }
+
+    for (const s of itemSales) {
+      const day = s.createdAt.toISOString().split('T')[0];
+      byDay[day] = (byDay[day] || 0) + s.amount;
+      byMethod['CASH'] = (byMethod['CASH'] || 0) + s.amount;
+      itemSalesTotal += s.amount;
+    }
+
+    const total = subscriptionsTotal + itemSalesTotal;
 
     const chart = Object.entries(byDay)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, amount]) => ({ date, amount }));
 
-    return { total, chart, byMethod, payments };
+    return {
+      total,
+      subscriptionsTotal,
+      itemSalesTotal,
+      chart,
+      byMethod,
+      payments,
+      itemSales,
+    };
+  }
+
+  async getReportsMeta(gymId: string) {
+    const [firstMember, firstPayment, firstSale] = await Promise.all([
+      this.prisma.member.findFirst({
+        where: { gymId },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      }),
+      this.prisma.payment.findFirst({
+        where: { subscription: { member: { gymId } } },
+        orderBy: { paidAt: 'asc' },
+        select: { paidAt: true },
+      }),
+      this.prisma.itemSale.findFirst({
+        where: { gymId },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const dates: Date[] = [];
+    if (firstMember?.createdAt) dates.push(firstMember.createdAt);
+    if (firstPayment?.paidAt) dates.push(firstPayment.paidAt);
+    if (firstSale?.createdAt) dates.push(firstSale.createdAt);
+
+    let firstDate: string | null = null;
+    if (dates.length > 0) {
+      dates.sort((a, b) => a.getTime() - b.getTime());
+      firstDate = dates[0].toISOString().split('T')[0];
+    }
+
+    return {
+      firstRecordDate: firstDate,
+    };
   }
 
   async getAttendanceReport(gymId: string, filter: ReportFilter) {

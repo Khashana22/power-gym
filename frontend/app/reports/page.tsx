@@ -10,16 +10,30 @@ import api from '../lib';
 import {
   BarChart3, Users, Calendar, Download, FileText,
   TrendingUp, RefreshCw, ArrowUpRight, CreditCard,
+  Plus, Coffee, Trash2, X, Check,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Legend,
+  ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
+
+interface ItemSaleRecord {
+  id: string;
+  itemName: string;
+  amount: number;
+  category: string;
+  quantity: number;
+  notes: string | null;
+  createdAt: string;
+}
 
 interface RevenueReport {
   total: number;
+  subscriptionsTotal?: number;
+  itemSalesTotal?: number;
   chart: { date: string; amount: number }[];
   byMethod: Record<string, number>;
+  itemSales?: ItemSaleRecord[];
 }
 
 interface AttendanceReport {
@@ -29,7 +43,7 @@ interface AttendanceReport {
 }
 
 interface MembersReport {
-  newMembers: { id: string; fullName: string; memberCode: string; createdAt: string }[];
+  newMembers: { id: string; fullName: string; memberCode: string; createdAt: string; phone?: string }[];
   totalActive: number;
   expiringSoon: number;
   expiringThisMonth: number;
@@ -41,28 +55,78 @@ function StatCard({ label, value, sub, color = 'text-white' }: {
   return (
     <div className="bg-[#09090B] p-5 rounded-xl border border-[#27272A]">
       <p className="text-zinc-400 text-sm mb-1">{label}</p>
-      <p className={`text-3xl font-bold ${color}`}>{value}</p>
+      <p className={`text-2xl sm:text-3xl font-bold ${color}`}>{value}</p>
       {sub && <p className="text-zinc-500 text-xs mt-1">{sub}</p>}
     </div>
   );
 }
 
+function getCurrentMonthRange() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return {
+    start: `${year}-${pad(month + 1)}-01`,
+    end: `${year}-${pad(month + 1)}-${pad(end.getDate())}`,
+    label: now.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' }),
+  };
+}
+
+function getPreviousMonthRange() {
+  const now = new Date();
+  const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const month = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const end = new Date(year, month + 1, 0);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const d = new Date(year, month, 1);
+  return {
+    start: `${year}-${pad(month + 1)}-01`,
+    end: `${year}-${pad(month + 1)}-${pad(end.getDate())}`,
+    label: d.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' }),
+  };
+}
+
+const quickSaleItems = [
+  { name: 'مياه صغيرة', price: 5 },
+  { name: 'مياه كبيرة', price: 10 },
+  { name: 'عصير طبيعي', price: 20 },
+  { name: 'مشروب طاقة', price: 35 },
+  { name: 'بروتين شيك', price: 50 },
+];
+
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<'revenue' | 'attendance' | 'members'>('revenue');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [periodPreset, setPeriodPreset] = useState<'current_month' | 'prev_month' | 'from_start' | 'custom'>('current_month');
+  const [firstRecordDate, setFirstRecordDate] = useState<string | null>(null);
+
+  const initialRange = getCurrentMonthRange();
+  const [startDate, setStartDate] = useState(initialRange.start);
+  const [endDate, setEndDate] = useState(initialRange.end);
+
   const [revenueData, setRevenueData] = useState<RevenueReport | null>(null);
   const [attendanceData, setAttendanceData] = useState<AttendanceReport | null>(null);
   const [membersData, setMembersData] = useState<MembersReport | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Quick sale modal state
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [saleForm, setSaleForm] = useState({ itemName: '', amount: '' });
+  const [savingSale, setSavingSale] = useState(false);
+
   const { toast } = useToast();
 
+  // Fetch gym meta (first member/payment date)
   useEffect(() => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - 29);
-    setEndDate(end.toISOString().split('T')[0]);
-    setStartDate(start.toISOString().split('T')[0]);
+    api.get<{ firstRecordDate: string | null }>('/reports/meta')
+      .then((res) => {
+        if (res?.firstRecordDate) {
+          setFirstRecordDate(res.firstRecordDate);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const fetchReports = useCallback(async () => {
@@ -85,9 +149,77 @@ export default function ReportsPage() {
     }
   }, [startDate, endDate]);
 
+  // Auto-fetch on mount and whenever startDate/endDate change (NO manual button required!)
   useEffect(() => {
-    if (startDate && endDate) fetchReports();
-  }, []); // initial load
+    if (startDate && endDate) {
+      fetchReports();
+    }
+  }, [startDate, endDate, fetchReports]);
+
+  // Handle Preset Changes
+  const applyPreset = (preset: 'current_month' | 'prev_month' | 'from_start' | 'custom') => {
+    setPeriodPreset(preset);
+    if (preset === 'current_month') {
+      const r = getCurrentMonthRange();
+      setStartDate(r.start);
+      setEndDate(r.end);
+    } else if (preset === 'prev_month') {
+      const r = getPreviousMonthRange();
+      setStartDate(r.start);
+      setEndDate(r.end);
+    } else if (preset === 'from_start') {
+      const today = new Date().toISOString().split('T')[0];
+      setStartDate(firstRecordDate || initialRange.start);
+      setEndDate(today);
+    }
+  };
+
+  const handleSaveSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!saleForm.itemName.trim()) {
+      toast({ title: 'خطأ', description: 'يرجى تحديد أو إدخال اسم الصنف', variant: 'destructive' });
+      return;
+    }
+    const price = parseFloat(saleForm.amount);
+    if (isNaN(price) || price <= 0) {
+      toast({ title: 'خطأ', description: 'يرجى إدخال سعر صحيح أكبر من الصفر', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setSavingSale(true);
+      await api.post('/sales', {
+        itemName: saleForm.itemName.trim(),
+        amount: price,
+      });
+      toast({
+        title: 'تم تسجيل البيع بنجاح',
+        description: `تمت إضافة (${saleForm.itemName}) بمبلغ ${price} ج.م إلى إجمالي الإيرادات.`,
+      });
+      setSaleForm({ itemName: '', amount: '' });
+      setShowSaleModal(false);
+      fetchReports();
+    } catch (err: any) {
+      toast({
+        title: 'خطأ',
+        description: err.message || 'فشل في تسجيل العملية',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingSale(false);
+    }
+  };
+
+  const handleDeleteSale = async (id: string, name: string) => {
+    if (!confirm(`هل أنت متأكد من حذف عملية بيع (${name})؟ سيتم خصمها من الإيرادات.`)) return;
+    try {
+      await api.del(`/sales/${id}`);
+      toast({ title: 'تم الحذف', description: 'تم حذف العملية وخصم قيمتها من الإيرادات بنجاح' });
+      fetchReports();
+    } catch {
+      toast({ title: 'خطأ', description: 'فشل حذف العملية', variant: 'destructive' });
+    }
+  };
 
   const handleExport = async (type: 'pdf' | 'excel', dataset: 'revenue' | 'attendance') => {
     const params = `startDate=${startDate}&endDate=${endDate}`;
@@ -128,65 +260,132 @@ export default function ReportsPage() {
     }
   };
 
+  const currentMonth = getCurrentMonthRange();
+  const prevMonth = getPreviousMonthRange();
+
   return (
-    <DashboardShell title="التقارير والإحصائيات">
+    <DashboardShell title="التقارير والإحصائيات المالية">
       <div className="space-y-6">
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#18181B] p-4 rounded-xl border border-[#27272A]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-zinc-400 text-sm">من:</span>
+        {/* ── Period Selector & Filter Controls ───────────────────────── */}
+        <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Quick Period Buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-zinc-400 text-xs font-medium ml-1">عرض حسب:</span>
+              <button
+                type="button"
+                onClick={() => applyPreset('current_month')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  periodPreset === 'current_month'
+                    ? 'bg-[#F97316] text-white shadow-md'
+                    : 'bg-[#27272A] text-zinc-300 hover:bg-[#3F3F46]'
+                }`}
+              >
+                {currentMonth.label} (الشهر الحالي)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('prev_month')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  periodPreset === 'prev_month'
+                    ? 'bg-[#F97316] text-white shadow-md'
+                    : 'bg-[#27272A] text-zinc-300 hover:bg-[#3F3F46]'
+                }`}
+              >
+                {prevMonth.label} (الشهر السابق)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('from_start')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  periodPreset === 'from_start'
+                    ? 'bg-[#F97316] text-white shadow-md'
+                    : 'bg-[#27272A] text-zinc-300 hover:bg-[#3F3F46]'
+                }`}
+              >
+                منذ تسجيل أول عضو
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriodPreset('custom')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  periodPreset === 'custom'
+                    ? 'bg-[#F97316] text-white shadow-md'
+                    : 'bg-[#27272A] text-zinc-300 hover:bg-[#3F3F46]'
+                }`}
+              >
+                تاريخ مخصص
+              </button>
+            </div>
+
+            {/* Export Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport('pdf', activeTab === 'attendance' ? 'attendance' : 'revenue')}
+                className="border-[#27272A] text-white hover:bg-[#27272A] text-xs h-8"
+              >
+                <FileText className="w-3.5 h-3.5 ml-1.5" /> PDF
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport('excel', activeTab === 'attendance' ? 'attendance' : 'revenue')}
+                className="border-[#27272A] text-white hover:bg-[#27272A] text-xs h-8"
+              >
+                <Download className="w-3.5 h-3.5 ml-1.5" /> Excel
+              </Button>
+            </div>
+          </div>
+
+          {/* Date Range Inputs */}
+          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[#27272A]">
+            <span className="text-zinc-400 text-xs">من تاريخ:</span>
             <Input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="bg-[#09090B] border-[#27272A] text-white w-36 text-center"
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setPeriodPreset('custom');
+              }}
+              className="bg-[#09090B] border-[#27272A] text-white w-36 text-center text-xs h-9"
             />
-            <span className="text-zinc-400 text-sm">إلى:</span>
+            <span className="text-zinc-400 text-xs">إلى تاريخ:</span>
             <Input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="bg-[#09090B] border-[#27272A] text-white w-36 text-center"
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setPeriodPreset('custom');
+              }}
+              className="bg-[#09090B] border-[#27272A] text-white w-36 text-center text-xs h-9"
             />
             <Button
-              className="bg-[#F97316] hover:bg-[#ea580c] text-white"
+              size="sm"
+              variant="ghost"
+              className="text-zinc-400 hover:text-white text-xs h-9"
               onClick={fetchReports}
               disabled={loading}
+              title="تحديث البيانات"
             >
-              <RefreshCw className={`w-4 h-4 ml-2 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'جاري التحديث…' : 'تحديث'}
-            </Button>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleExport('pdf', activeTab === 'attendance' ? 'attendance' : 'revenue')}
-              className="border-[#27272A] text-white hover:bg-[#27272A]"
-            >
-              <FileText className="w-4 h-4 ml-2" /> تصدير PDF
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleExport('excel', activeTab === 'attendance' ? 'attendance' : 'revenue')}
-              className="border-[#27272A] text-white hover:bg-[#27272A]"
-            >
-              <Download className="w-4 h-4 ml-2" /> تصدير Excel
+              <RefreshCw className={`w-3.5 h-3.5 ml-1.5 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'جاري التحميل…' : 'تحديث'}
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* ── Navigation Tabs ────────────────────────────────────────── */}
         <div className="flex border-b border-[#27272A]">
           {([
-            { key: 'revenue', icon: TrendingUp, label: 'الإيرادات' },
-            { key: 'attendance', icon: Calendar, label: 'الحضور' },
-            { key: 'members', icon: Users, label: 'الأعضاء' },
+            { key: 'revenue', icon: TrendingUp, label: 'التقارير المالية والمبيعات' },
+            { key: 'attendance', icon: Calendar, label: 'تقارير الحضور' },
+            { key: 'members', icon: Users, label: 'تقارير الأعضاء' },
           ] as const).map(({ key, icon: Icon, label }) => (
             <button
               key={key}
-              className={`px-6 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${
+              className={`px-5 py-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === key
                   ? 'border-[#F97316] text-[#F97316]'
                   : 'border-transparent text-zinc-400 hover:text-white'
@@ -198,32 +397,132 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* Revenue Tab */}
+        {/* ── Revenue Tab ────────────────────────────────────────────── */}
         {activeTab === 'revenue' && (
           <div className="space-y-6">
+
+            {/* Header with Quick Sale Action */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[#18181B] p-4 rounded-xl border border-[#27272A]">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-[#F97316]" />
+                  الإيرادات ومبيعات البوفيه
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  إجمالي التحصيل المالي للفترة المحددة شامل الاشتراكات ومبيعات المشروبات
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowSaleModal(true)}
+                className="bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold flex items-center gap-1.5 text-sm shadow-md"
+              >
+                <Plus className="w-4 h-4" />
+                تسجيل بيع مشروب / مياه
+              </Button>
+            </div>
+
+            {/* Stats Cards Breakdown */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                label="إجمالي الإيرادات"
+                label="إجمالي الإيرادات الكلي"
                 value={`${(revenueData?.total || 0).toLocaleString('ar-EG')} ج.م`}
+                sub="شامل كافة الاشتراكات والمبيعات"
                 color="text-[#F97316]"
               />
               <StatCard
-                label="المتوسط اليومي"
-                value={`${Math.round((revenueData?.total || 0) / Math.max(revenueChart.length, 1)).toLocaleString('ar-EG')} ج.م`}
+                label="إيرادات الاشتراكات"
+                value={`${(revenueData?.subscriptionsTotal ?? revenueData?.total ?? 0).toLocaleString('ar-EG')} ج.م`}
+                sub="تحصيل خطط اشتراكات الأعضاء"
+                color="text-white"
               />
-              {Object.entries(revenueData?.byMethod || {}).slice(0, 2).map(([method, amount]) => (
-                <StatCard key={method} label={getMethodName(method)} value={`${(amount as number).toLocaleString('ar-EG')} ج.م`} />
-              ))}
+              <StatCard
+                label="مبيعات المشروبات والمياه"
+                value={`${(revenueData?.itemSalesTotal || 0).toLocaleString('ar-EG')} ج.م`}
+                sub="مبيعات البوفيه والعصائر"
+                color="text-[#22C55E]"
+              />
+              <StatCard
+                label="المتوسط اليومي للإيراد"
+                value={`${Math.round((revenueData?.total || 0) / Math.max(revenueChart.length, 1)).toLocaleString('ar-EG')} ج.م`}
+                sub="معدل التحصيل اليومي بالفترة"
+              />
             </div>
 
+            {/* Dedicated Item Sales Section (سجل مبيعات المشروبات والمياه) */}
             <Card className="border-[#27272A] bg-[#18181B]">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Coffee className="w-5 h-5 text-[#22C55E]" />
+                    <h3 className="text-base font-bold text-white">سجل مبيعات المشروبات والمياه (البوفيه)</h3>
+                  </div>
+                  <span className="text-xs bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#22C55E] px-3 py-1 rounded-full font-medium">
+                    إجمالي المبيعات: {(revenueData?.itemSalesTotal || 0).toLocaleString('ar-EG')} ج.م
+                  </span>
+                </div>
+
+                {revenueData?.itemSales && revenueData.itemSales.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-right">
+                      <thead>
+                        <tr className="text-zinc-500 border-b border-[#27272A] text-xs">
+                          <th className="py-2.5 pl-4">اسم الصنف</th>
+                          <th className="py-2.5 pl-4">التصنيف</th>
+                          <th className="py-2.5 pl-4">السعر</th>
+                          <th className="py-2.5 pl-4">التاريخ والوقت</th>
+                          <th className="py-2.5 text-left">إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#27272A]/50">
+                        {revenueData.itemSales.map((sale) => (
+                          <tr key={sale.id} className="hover:bg-[#27272A]/30 transition-colors">
+                            <td className="py-3 pl-4 text-white font-medium">{sale.itemName}</td>
+                            <td className="py-3 pl-4 text-zinc-400 text-xs">{sale.category || 'مشروبات'}</td>
+                            <td className="py-3 pl-4 text-[#22C55E] font-bold font-mono">
+                              {sale.amount.toLocaleString('ar-EG')} ج.م
+                            </td>
+                            <td className="py-3 pl-4 text-zinc-400 text-xs">
+                              {new Date(sale.createdAt).toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="py-3 text-left">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleDeleteSale(sale.id, sale.itemName)}
+                                className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                                title="حذف العملية وخصمها من الإيراد"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-zinc-500 text-sm">
+                    لا توجد مبيعات مشروبات مسجلة في هذه الفترة. يمكنك الضغط على "تسجيل بيع مشروب / مياه" بالأعلى لتسجيل بيع جديد.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Daily Trend Chart */}
+            <Card className="border-[#27272A] bg-[#18181B]">
+              <CardContent className="p-6">
+                <h3 className="text-base font-semibold text-white mb-6 flex items-center gap-2">
                   <ArrowUpRight className="w-5 h-5 text-[#F97316]" />
-                  اتجاه الإيرادات اليومية
+                  اتجاه الإيرادات اليومية بالفترة
                 </h3>
                 {revenueChart.length > 0 ? (
-                  <div className="h-[360px]">
+                  <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={revenueChart}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
@@ -246,7 +545,7 @@ export default function ReportsPage() {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="h-[200px] flex items-center justify-center text-zinc-500">
+                  <div className="h-[180px] flex items-center justify-center text-zinc-500">
                     {loading ? 'جاري تحميل الرسم البياني…' : 'لا توجد بيانات إيرادات لهذه الفترة'}
                   </div>
                 )}
@@ -262,7 +561,7 @@ export default function ReportsPage() {
                   </h3>
                   <div className="space-y-3">
                     {Object.entries(revenueData.byMethod).map(([method, amount]) => {
-                      const pct = Math.round(((amount as number) / revenueData.total) * 100);
+                      const pct = Math.round(((amount as number) / Math.max(revenueData.total, 1)) * 100);
                       return (
                         <div key={method} className="space-y-1">
                           <div className="flex justify-between text-sm">
@@ -285,7 +584,7 @@ export default function ReportsPage() {
           </div>
         )}
 
-        {/* Attendance Tab */}
+        {/* ── Attendance Tab ────────────────────────────────────────── */}
         {activeTab === 'attendance' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -329,7 +628,7 @@ export default function ReportsPage() {
           </div>
         )}
 
-        {/* Members Tab */}
+        {/* ── Members Tab ───────────────────────────────────────────── */}
         {activeTab === 'members' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -360,7 +659,7 @@ export default function ReportsPage() {
                           <tr key={m.id} className="border-b border-[#27272A]/50 hover:bg-[#27272A]/30 transition-colors">
                             <td className="py-2.5 pl-4 text-[#F97316] font-mono text-xs">{m.memberCode}</td>
                             <td className="py-2.5 pl-4 text-white font-medium">{m.fullName}</td>
-                            <td className="py-2.5 pl-4 text-zinc-400 font-mono" dir="ltr">{(m as any).phone}</td>
+                            <td className="py-2.5 pl-4 text-zinc-400 font-mono" dir="ltr">{m.phone || '-'}</td>
                             <td className="py-2.5 text-zinc-400">
                               {new Date(m.createdAt).toLocaleDateString('ar-EG')}
                             </td>
@@ -372,6 +671,91 @@ export default function ReportsPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
+        )}
+
+        {/* ── Modal: تسجيل بيع مشروب / مياه ────────────────────────────── */}
+        {showSaleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-[#18181B] border border-[#27272A] rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-[#27272A] pb-3">
+                <div className="flex items-center gap-2 text-white font-bold text-lg">
+                  <Coffee className="w-5 h-5 text-[#22C55E]" />
+                  <span>تسجيل بيع مشروب / مياه</span>
+                </div>
+                <button
+                  onClick={() => setShowSaleModal(false)}
+                  className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-[#27272A]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-400 font-medium">اختيار سريع للصنف:</label>
+                <div className="flex flex-wrap gap-2">
+                  {quickSaleItems.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setSaleForm({ itemName: item.name, amount: item.price.toString() })}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                        saleForm.itemName === item.name
+                          ? 'border-[#22C55E] bg-[#22C55E]/20 text-[#22C55E] font-bold'
+                          : 'border-[#27272A] bg-[#09090B] text-zinc-300 hover:border-zinc-500'
+                      }`}
+                    >
+                      {item.name} ({item.price} ج.م)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveSale} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-300 font-medium">اسم الصنف / المشروب *</label>
+                  <Input
+                    placeholder="مثال: مياه معدنية، عصير برتقال، ..."
+                    value={saleForm.itemName}
+                    onChange={(e) => setSaleForm({ ...saleForm, itemName: e.target.value })}
+                    className="bg-[#09090B] border-[#27272A] text-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-300 font-medium">السعر (ج.م) *</label>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    placeholder="مثال: 10 أو 25"
+                    value={saleForm.amount}
+                    onChange={(e) => setSaleForm({ ...saleForm, amount: e.target.value })}
+                    className="bg-[#09090B] border-[#27272A] text-white font-mono"
+                    required
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSaleModal(false)}
+                    className="border-[#27272A] text-zinc-300 hover:bg-[#27272A]"
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={savingSale}
+                    className="bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold min-w-28"
+                  >
+                    {savingSale ? 'جاري الحفظ…' : 'حفظ في الإيراد'}
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

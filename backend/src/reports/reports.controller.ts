@@ -14,6 +14,11 @@ interface AuthenticatedRequest extends Request {
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  @Get('meta')
+  meta(@Req() req: AuthenticatedRequest) {
+    return this.reportsService.getReportsMeta(req.user.gymId);
+  }
+
   @Get('revenue')
   revenue(
     @Req() req: AuthenticatedRequest,

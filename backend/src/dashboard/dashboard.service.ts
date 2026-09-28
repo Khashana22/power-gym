@@ -24,7 +24,9 @@ export class DashboardService {
       expiring3Days,
       attendanceToday,
       revenueToday,
+      itemSalesToday,
       revenueThisMonth,
+      itemSalesThisMonth,
       recentMembers,
       expiringSubs,
       revenueChart,
@@ -59,8 +61,18 @@ export class DashboardService {
         _sum: { amount: true },
       }),
 
+      this.prisma.itemSale.aggregate({
+        where: { gymId, createdAt: { gte: startOfDay } },
+        _sum: { amount: true },
+      }),
+
       this.prisma.payment.aggregate({
         where: { subscription: { member: { gymId } }, paidAt: { gte: startOfMonth } },
+        _sum: { amount: true },
+      }),
+
+      this.prisma.itemSale.aggregate({
+        where: { gymId, createdAt: { gte: startOfMonth } },
         _sum: { amount: true },
       }),
 
@@ -91,6 +103,9 @@ export class DashboardService {
       this.getAttendanceChart(gymId, 7),
     ]);
 
+    const totalTodayRevenue = (revenueToday._sum.amount ?? 0) + (itemSalesToday._sum.amount ?? 0);
+    const totalMonthRevenue = (revenueThisMonth._sum.amount ?? 0) + (itemSalesThisMonth._sum.amount ?? 0);
+
     return {
       totalMembers,
       newMembersThisMonth,
@@ -99,8 +114,8 @@ export class DashboardService {
       expiringSoon7Days: expiringSoon,
       expiringSoon3Days: expiring3Days,
       attendanceToday,
-      revenueToday: revenueToday._sum.amount ?? 0,
-      revenueThisMonth: revenueThisMonth._sum.amount ?? 0,
+      revenueToday: totalTodayRevenue,
+      revenueThisMonth: totalMonthRevenue,
       recentMembers,
       expiringSubs,
       revenueChart,

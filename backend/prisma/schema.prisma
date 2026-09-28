@@ -76,6 +76,7 @@ model Gym {
   members   Member[]
   plans     MembershipPlan[]
   expenses  Expense[]
+  itemSales ItemSale[]
   settings  GymSettings?
   auditLogs AuditLog[]
 }
@@ -317,3 +318,21 @@ model AuditLog {
   @@index([gymId, createdAt])
   @@index([entity, entityId])
 }
+
+// ─── ItemSale (المبيعات / المشروبات والمياه) ──────────────────────────────────
+
+model ItemSale {
+  id        String   @id @default(cuid())
+  itemName  String
+  amount    Float
+  category  String   @default("مشروبات")
+  quantity  Int      @default(1)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  gymId     String
+  gym       Gym      @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, createdAt])
+}
+

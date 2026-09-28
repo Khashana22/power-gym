@@ -22,6 +22,7 @@ import { SearchModule } from './search/search.module';
 import { AuditModule } from './audit/audit.module';
 import { MembershipCardModule } from './membership-card/membership-card.module';
 import { SnapshotsModule } from './snapshots/snapshots.module';
+import { SalesModule } from './sales/sales.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { SnapshotsModule } from './snapshots/snapshots.module';
     SearchModule,
     MembershipCardModule,
     SnapshotsModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
