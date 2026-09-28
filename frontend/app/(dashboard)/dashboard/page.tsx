@@ -3,10 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
-} from 'recharts';
-import {
   Users, CreditCard, TrendingUp, Zap,
   UserPlus, DollarSign, ScanLine, RefreshCw,
   Clock, AlertTriangle,
@@ -19,8 +15,6 @@ import {
 import api from '../../lib';
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
-interface ChartPoint { date: string; label: string; amount?: number; count?: number; }
-
 interface DashboardStats {
   totalMembers: number;
   newMembersThisMonth: number;
@@ -38,8 +32,6 @@ interface DashboardStats {
     member: { id: string; fullName: string; memberCode: string; phone: string; photo: string | null };
     plan: { name: string };
   }[];
-  revenueChart: ChartPoint[];
-  attendanceChart: ChartPoint[];
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -52,22 +44,6 @@ function currency(n: number) {
 function daysLeft(dateStr: string) {
   const diff = new Date(dateStr).getTime() - Date.now();
   return Math.ceil(diff / 86_400_000);
-}
-
-/* ─── Custom Tooltip ─────────────────────────────────────────────────────── */
-function ChartTooltip({ active, payload, label, isCurrency }: {
-  active?: boolean; payload?: { value: number }[]; label?: string; isCurrency?: boolean;
-}) {
-  if (!active || !payload?.length) return null;
-  const val = payload[0].value;
-  return (
-    <div className="bg-[#18181B] border border-[#27272A] rounded-lg px-3 py-2 shadow-xl text-right">
-      <p className="text-xs text-[#71717A] mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-[#FAFAFA]">
-        {isCurrency ? currency(val) : `${fmt(val)} عضو`}
-      </p>
-    </div>
-  );
 }
 
 /* ─── Skeleton Loaders ───────────────────────────────────────────────────── */
@@ -84,15 +60,6 @@ function StatsSkeleton() {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function ChartSkeleton() {
-  return (
-    <div className="bg-[#18181B] border border-[#27272A] rounded-xl p-5">
-      <Skeleton className="h-4 w-32 mb-4" />
-      <Skeleton className="h-48 w-full" />
     </div>
   );
 }
@@ -183,14 +150,12 @@ export default function DashboardPage() {
               title="إجمالي الأعضاء"
               value={fmt(stats.totalMembers)}
               icon={<Users size={20} />}
-              trend={{ value: stats.newMembersThisMonth, label: 'جديد هذا الشهر' }}
               variant="default"
             />
             <StatCard
               title="الاشتراكات السارية"
               value={fmt(stats.activeSubscriptions)}
               icon={<CreditCard size={20} />}
-              trend={{ value: -stats.expiringSoon7Days, label: 'تنتهي خلال 7 أيام' }}
               variant="success"
             />
             <StatCard
@@ -207,89 +172,6 @@ export default function DashboardPage() {
                 variant="warning"
               />
             </Link>
-          </div>
-        )}
-
-        {/* ── Charts Row ────────────────────────────────────────────── */}
-        {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartSkeleton />
-            <ChartSkeleton />
-          </div>
-        ) : stats && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Revenue Chart */}
-            <Card>
-              <CardHeader>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-[#FAFAFA]">الإيرادات (آخر 7 أيام)</p>
-                  <p className="text-xs text-[#71717A] mt-0.5">إجمالي التحصيل اليومي بالجنيه المصري</p>
-                </div>
-                <TrendingUp size={16} className="text-[#F97316]" />
-              </CardHeader>
-              <CardContent className="pt-4 pb-2">
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={stats.revenueChart} barSize={24}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272A" vertical={false} />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fill: '#71717A', fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: '#71717A', fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v) => v === 0 ? '0' : `${(v / 1000).toFixed(0)} ألف`}
-                      width={42}
-                    />
-                    <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: '#F9731610' }} />
-                    <Bar dataKey="amount" fill="#F97316" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Attendance Chart */}
-            <Card>
-              <CardHeader>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-[#FAFAFA]">حضور الأعضاء (آخر 7 أيام)</p>
-                  <p className="text-xs text-[#71717A] mt-0.5">عدد مرات الدخول اليومية</p>
-                </div>
-                <Users size={16} className="text-[#22C55E]" />
-              </CardHeader>
-              <CardContent className="pt-4 pb-2">
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={stats.attendanceChart}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272A" vertical={false} />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fill: '#71717A', fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: '#71717A', fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      width={28}
-                    />
-                    <Tooltip content={<ChartTooltip />} />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#22C55E"
-                      strokeWidth={2.5}
-                      dot={{ fill: '#22C55E', r: 3, strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: '#22C55E' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
           </div>
         )}
 
