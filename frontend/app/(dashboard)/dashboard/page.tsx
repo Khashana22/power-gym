@@ -139,6 +139,41 @@ export default function DashboardPage() {
     <DashboardShell title="لوحة التحكم الرئيسية">
       <div className="space-y-6 max-w-screen-2xl">
 
+        {/* ── Quick Actions (Top Section) ─────────────────────────── */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-[#FAFAFA] text-right">إجراءات سريعة</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-right">
+            <QuickAction
+              href="/members/new"
+              icon={<UserPlus size={18} />}
+              label="إضافة عضو جديد"
+              description="تسجيل مشترك جديد وإصدار كود"
+              color="primary"
+            />
+            <QuickAction
+              href="/payments"
+              icon={<DollarSign size={18} />}
+              label="تسجيل دفعة مالية"
+              description="تحصيل اشتراك نقدي أو إلكتروني"
+              color="success"
+            />
+            <QuickAction
+              href="/attendance"
+              icon={<ScanLine size={18} />}
+              label="تسجيل الحضور بالباركود"
+              description="فحص كود QR وتسجيل الدخول"
+              color="info"
+            />
+            <QuickAction
+              href="/subscriptions"
+              icon={<CreditCard size={18} />}
+              label="إدارة وتجديد الاشتراكات"
+              description="تجديد أو إسناد خطة جديدة لعضو"
+              color="warning"
+            />
+          </div>
+        </div>
+
         {/* ── Stats Row ─────────────────────────────────────────────── */}
         {loading ? <StatsSkeleton /> : error ? (
           <ErrorState title="تعذر تحميل الإحصائيات" description={error} onRetry={fetchStats} />
@@ -162,7 +197,6 @@ export default function DashboardPage() {
               title="إيرادات اليوم"
               value={currency(stats.revenueToday)}
               icon={<TrendingUp size={20} />}
-              trend={{ value: 0, label: `${currency(stats.revenueThisMonth)} هذا الشهر` }}
               variant="primary"
             />
             <Link href="/attendance" className="block">
@@ -259,45 +293,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Quick Actions + Activity Row ─────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-right">
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <p className="text-sm font-semibold text-[#FAFAFA]">إجراءات سريعة</p>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-3">
-              <QuickAction
-                href="/members/new"
-                icon={<UserPlus size={18} />}
-                label="إضافة عضو جديد"
-                description="تسجيل مشترك جديد وإصدار كود"
-                color="primary"
-              />
-              <QuickAction
-                href="/payments"
-                icon={<DollarSign size={18} />}
-                label="تسجيل دفعة مالية"
-                description="تحصيل اشتراك نقدي أو إلكتروني"
-                color="success"
-              />
-              <QuickAction
-                href="/attendance"
-                icon={<ScanLine size={18} />}
-                label="تسجيل الحضور بالباركود"
-                description="فحص كود QR وتسجيل الدخول"
-                color="info"
-              />
-              <QuickAction
-                href="/subscriptions"
-                icon={<CreditCard size={18} />}
-                label="إدارة وتجديد الاشتراكات"
-                description="تجديد أو إسناد خطة جديدة لعضو"
-                color="warning"
-              />
-            </CardContent>
-          </Card>
+        {/* ── Activity Row ─────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-right">
 
           {/* Recent Members */}
           <Card className="lg:col-span-1">

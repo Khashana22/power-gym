@@ -29,12 +29,18 @@ type CheckInResult =
       subscriptionStatus: string | null;
       plan: string | null;
       checkedInAt: string;
+      subscriptionEndsAt: string | null;
+      daysRemaining: number;
     }
   | {
       kind: 'duplicate';
       memberName: string;
       memberCode: string;
       previousCheckInTime: string;
+      subscriptionStatus: string | null;
+      plan: string | null;
+      subscriptionEndsAt: string | null;
+      daysRemaining: number;
     }
   | { kind: 'error'; message: string };
 
@@ -279,6 +285,8 @@ export default function AttendancePage() {
           subscriptionStatus: string | null;
           plan: string | null;
           checkedInAt?: string;
+          subscriptionEndsAt?: string | null;
+          daysRemaining?: number;
         }>('/attendance/checkin', { memberCode: trimmed });
 
         if (response.alreadyCheckedIn) {
@@ -287,6 +295,10 @@ export default function AttendancePage() {
             memberName: response.member.fullName,
             memberCode: response.member.memberCode,
             previousCheckInTime: response.previousCheckInTime!,
+            subscriptionStatus: response.subscriptionStatus,
+            plan: response.plan,
+            subscriptionEndsAt: response.subscriptionEndsAt ?? null,
+            daysRemaining: response.daysRemaining ?? 0,
           });
         } else {
           setResult({
@@ -296,6 +308,8 @@ export default function AttendancePage() {
             subscriptionStatus: response.subscriptionStatus,
             plan: response.plan,
             checkedInAt: response.checkedInAt!,
+            subscriptionEndsAt: response.subscriptionEndsAt ?? null,
+            daysRemaining: response.daysRemaining ?? 0,
           });
           // Refresh the today list on successful check-in
           fetchToday();
@@ -439,6 +453,23 @@ export default function AttendancePage() {
                       <Clock className="w-3 h-3" />
                       {formatTime(result.checkedInAt)}
                     </span>
+                    {result.subscriptionEndsAt && (
+                      <span className="text-sm px-3 py-1 rounded-full border border-zinc-700 bg-zinc-800/50 text-zinc-300 font-medium flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        ينتهي: {new Date(result.subscriptionEndsAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Africa/Cairo' })}
+                      </span>
+                    )}
+                    {result.daysRemaining !== undefined && (
+                      <span className={`text-sm px-3 py-1 rounded-full border font-medium ${
+                        result.daysRemaining === 0
+                          ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                          : result.daysRemaining <= 3
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                            : 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+                      }`}>
+                        {result.daysRemaining === 0 ? 'آخر يوم' : `${result.daysRemaining} يوم متبقي`}
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-green-400 font-semibold text-lg flex items-center gap-2 justify-center sm:justify-end">
@@ -454,15 +485,42 @@ export default function AttendancePage() {
                 <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center border-2 border-amber-500 flex-shrink-0">
                   <AlertCircle className="w-8 h-8 text-amber-400" />
                 </div>
-                <div className="flex-1 text-center sm:text-right">
+                <div className="flex-1 text-center sm:text-right space-y-2">
                   <h3 className="text-xl font-bold text-amber-400">{result.memberName}</h3>
-                  <p className="text-zinc-300 mt-1 text-lg">
+                  <p className="text-zinc-400 font-mono text-xs">{result.memberCode}</p>
+                  <p className="text-zinc-300 text-lg">
                     هذا العضو سجّل حضوره اليوم بالفعل
                   </p>
-                  <p className="text-zinc-400 text-sm mt-1 flex items-center gap-1 justify-center sm:justify-end">
+                  <p className="text-zinc-400 text-sm flex items-center gap-1 justify-center sm:justify-end">
                     <Clock className="w-3.5 h-3.5" />
                     وقت الدخول السابق: {formatTime(result.previousCheckInTime)}
                   </p>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                    {result.subscriptionStatus && (
+                      <span className={`text-xs px-2 py-1 rounded-full border font-medium ${getStatusLabel(result.subscriptionStatus).color}`}>
+                        {result.plan
+                          ? `${result.plan} · ${getStatusLabel(result.subscriptionStatus).label}`
+                          : getStatusLabel(result.subscriptionStatus).label}
+                      </span>
+                    )}
+                    {result.subscriptionEndsAt && (
+                      <span className="text-xs px-2 py-1 rounded-full border border-zinc-700 bg-zinc-800/50 text-zinc-300 flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        ينتهي: {new Date(result.subscriptionEndsAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Africa/Cairo' })}
+                      </span>
+                    )}
+                    {result.daysRemaining !== undefined && (
+                      <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
+                        result.daysRemaining === 0
+                          ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                          : result.daysRemaining <= 3
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                            : 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+                      }`}>
+                        {result.daysRemaining === 0 ? 'آخر يوم' : `${result.daysRemaining} يوم متبقي`}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

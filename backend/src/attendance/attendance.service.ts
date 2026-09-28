@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckinDto } from './dto/checkin.dto';
+import { getEgyptStartOfDay, calculateDaysRemaining } from '../common/timezone.util';
 
 @Injectable()
 export class AttendanceService {
@@ -27,11 +28,13 @@ export class AttendanceService {
 
     const latestSubscription = member.subscriptions[0];
     const now = new Date();
+    const startOfDay = getEgyptStartOfDay(now);
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const isExpired = !latestSubscription || latestSubscription.status === 'EXPIRED' || latestSubscription.endDate <= now;
+    const subscriptionStatus = !latestSubscription ? null : (isExpired ? 'EXPIRED' : latestSubscription.status);
+    const daysRemaining = latestSubscription ? calculateDaysRemaining(latestSubscription.endDate, now) : 0;
 
-    // Check for duplicate check-in today
+    // Check for duplicate check-in today (Egypt calendar day)
     const existingCheckin = await this.prisma.attendance.findFirst({
       where: {
         memberId: member.id,
@@ -50,22 +53,16 @@ export class AttendanceService {
           phone: member.phone,
           photo: member.photo,
         },
-        subscriptionStatus: latestSubscription?.status ?? null,
+        subscriptionStatus,
         plan: latestSubscription?.plan?.name ?? null,
         subscriptionEndsAt: latestSubscription?.endDate ?? null,
+        daysRemaining,
       };
     }
 
     const attendance = await this.prisma.attendance.create({
       data: { memberId: member.id },
     });
-
-    const daysRemaining = latestSubscription
-      ? Math.ceil(
-          (latestSubscription.endDate.getTime() - now.getTime()) /
-            (1000 * 60 * 60 * 24),
-        )
-      : 0;
 
     return {
       alreadyCheckedIn: false,
@@ -77,7 +74,7 @@ export class AttendanceService {
         phone: member.phone,
         photo: member.photo,
       },
-      subscriptionStatus: latestSubscription?.status ?? null,
+      subscriptionStatus,
       plan: latestSubscription?.plan?.name ?? null,
       subscriptionEndsAt: latestSubscription?.endDate ?? null,
       daysRemaining,
@@ -86,8 +83,7 @@ export class AttendanceService {
   }
 
   async getToday(gymId: string) {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = getEgyptStartOfDay();
 
     return this.prisma.attendance.findMany({
       where: {

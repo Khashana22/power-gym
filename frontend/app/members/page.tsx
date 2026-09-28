@@ -158,11 +158,15 @@ export default function MembersPage() {
                   </tr>
                 ) : (
                   paginatedMembers.map((member) => (
-                    <tr key={member.id} className="hover:bg-zinc-800/50 transition-colors">
+                    <tr
+                      key={member.id}
+                      onClick={() => router.push(`/members/${member.id}`)}
+                      className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar fallback={member.fullName.substring(0, 2).toUpperCase()} src={member.photo} />
-                          <div className="font-medium text-zinc-100">{member.fullName}</div>
+                          <div className="font-medium text-zinc-100 group-hover:text-[#F97316] transition-colors">{member.fullName}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-zinc-300">{member.memberCode}</td>
@@ -175,7 +179,7 @@ export default function MembersPage() {
                       <td className="px-6 py-4 text-zinc-400">
                         {new Date(member.createdAt).toLocaleDateString('ar-EG')}
                       </td>
-                      <td className="px-6 py-4 text-left">
+                      <td className="px-6 py-4 text-left" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-start gap-2">
                           <Button size="icon" variant="ghost" onClick={() => router.push(`/members/${member.id}`)} title="عرض الملف">
                             <Eye className="h-4 w-4 text-zinc-400 hover:text-white" />

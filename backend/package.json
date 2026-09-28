@@ -96,7 +96,9 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "moduleNameMapper": {
+      "^(\\./.*)\\.js$": "$1"
+    },
     "testEnvironment": "node"
   }
 }

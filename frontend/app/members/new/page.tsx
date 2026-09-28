@@ -42,7 +42,14 @@ export default function NewMemberPage() {
     
     try {
       setLoading(true);
-      const data = await api.post<{ id: string }>('/members', formData);
+      const payload: { fullName: string; phone: string; email?: string } = {
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+      };
+      if (formData.email.trim()) {
+        payload.email = formData.email.trim();
+      }
+      const data = await api.post<{ id: string }>('/members', payload);
       showToast({ title: 'تم بنجاح', message: 'تم تسجيل العضو بنجاح', type: 'success' });
       router.push(`/members/${data.id}`);
     } catch (err: any) {

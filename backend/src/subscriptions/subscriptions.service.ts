@@ -8,6 +8,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { MembershipCardService } from '../membership-card/membership-card.service';
 import { AuditService, AuditContext } from '../audit/audit.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { getEgyptCalendarEndDate } from '../common/timezone.util';
 
 @Injectable()
 export class SubscriptionsService {
@@ -40,8 +41,7 @@ export class SubscriptionsService {
     }
 
     const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + plan.durationDays);
+    const endDate = getEgyptCalendarEndDate(startDate, plan.durationDays);
 
     const subscription = await this.prisma.subscription.create({
       data: {
@@ -110,8 +110,7 @@ export class SubscriptionsService {
 
     const now = new Date();
     const startDate = existing.endDate > now ? existing.endDate : now;
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + plan.durationDays);
+    const endDate = getEgyptCalendarEndDate(startDate, plan.durationDays);
 
     const newSubscription = await this.prisma.subscription.create({
       data: {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getEgyptStartOfDay } from '../common/timezone.util';
 
 @Injectable()
 export class DashboardService {
@@ -8,8 +9,7 @@ export class DashboardService {
   async getStats(gymId: string) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = getEgyptStartOfDay(now);
     const in3Days = new Date(now);
     in3Days.setDate(in3Days.getDate() + 3);
     const in7Days = new Date(now);

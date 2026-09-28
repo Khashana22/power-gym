@@ -2,6 +2,8 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -9,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -87,6 +90,43 @@ export class AuthService {
     );
 
     return this.buildAuthResponse(user);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('كلمة المرور الجديدة وتأكيد كلمة المرور غير متطابقين');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('المستخدم غير موجود');
+    }
+
+    const passwordValid = await argon2.verify(user.password, dto.currentPassword);
+    if (!passwordValid) {
+      throw new BadRequestException('كلمة المرور الحالية غير صحيحة');
+    }
+
+    const hashedPassword = await argon2.hash(dto.newPassword);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    // Audit log
+    await this.audit.log(
+      { gymId: user.gymId, userId: user.id },
+      'UPDATE',
+      'User',
+      user.id,
+      `تم تغيير كلمة المرور للمستخدم: ${user.email}`,
+    );
+
+    return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
   }
 
   private async buildAuthResponse(user: {

@@ -1,20 +1,84 @@
 'use client';
 
+import { useState } from 'react';
 import { DashboardShell } from '../components/dashboard-shell';
-import { Card, CardHeader, CardContent } from '../components/ui';
+import { Card, CardHeader, CardContent, Spinner } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Input, Textarea } from '../components/ui/input';
-import { Info, Smartphone, Building, Code2, Save } from 'lucide-react';
+import { Info, Smartphone, Building, Code2, Save, KeyRound } from 'lucide-react';
 import { useToast } from '../components/ui/toast';
+import api from '../lib';
 
 export default function SettingsPage() {
   const { toast } = useToast();
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const handleSave = () => {
     toast({
       title: 'تم حفظ الإعدادات',
       description: 'تم حفظ التعديلات بنجاح.',
     });
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال كلمة المرور الحالية',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!passwordData.newPassword) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال كلمة المرور الجديدة',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: 'خطأ',
+        description: 'يجب أن تكون كلمة المرور الجديدة 6 أحرف على الأقل',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: 'خطأ',
+        description: 'كلمة المرور الجديدة وتأكيد كلمة المرور غير متطابقين',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      await api.post('/auth/change-password', passwordData);
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تغيير كلمة المرور بنجاح',
+        variant: 'success',
+      });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      toast({
+        title: 'خطأ',
+        description: err.message || 'فشل في تغيير كلمة المرور',
+        variant: 'destructive',
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   return (
@@ -58,6 +122,70 @@ export default function SettingsPage() {
                 <Save className="w-4 h-4 ml-2" /> حفظ التعديلات
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="border-[#27272A] bg-[#18181B]">
+          <CardHeader className="border-b border-[#27272A] p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <KeyRound className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">تغيير كلمة المرور</h3>
+                <p className="text-sm text-zinc-400">تحديث كلمة مرور الحساب الإداري</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleChangePassword} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">كلمة المرور الحالية *</label>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="bg-[#09090B] border-[#27272A] font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">كلمة المرور الجديدة *</label>
+                  <Input
+                    type="password"
+                    placeholder="•••••••• (6 أحرف على الأقل)"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="bg-[#09090B] border-[#27272A] font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">تأكيد كلمة المرور الجديدة *</label>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="bg-[#09090B] border-[#27272A] font-mono"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="bg-amber-600 hover:bg-amber-700 text-white min-w-36"
+                >
+                  {passwordLoading && <Spinner className="w-4 h-4 ml-2" />}
+                  {passwordLoading ? 'جاري الحفظ...' : 'تحديث كلمة المرور'}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
 

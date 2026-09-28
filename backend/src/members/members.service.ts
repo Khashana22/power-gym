@@ -62,6 +62,7 @@ export class MembersService {
     const member = await this.prisma.member.create({
       data: {
         ...dto,
+        email: dto.email?.trim() || null,
         gymId,
         memberCode,
         qrToken,

@@ -1,10 +1,11 @@
-﻿import {
+import {
   IsString,
   IsNotEmpty,
   IsOptional,
   IsEmail,
   Matches,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateMemberDto {
@@ -21,7 +22,8 @@ export class CreateMemberDto {
   phone: string;
 
   @IsOptional()
-  @IsEmail()
+  @ValidateIf((o) => o.email && typeof o.email === 'string' && o.email.trim() !== '')
+  @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
   email?: string;
 
   @IsOptional()
