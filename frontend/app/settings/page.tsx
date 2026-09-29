@@ -5,7 +5,8 @@ import { DashboardShell } from '../components/dashboard-shell';
 import { Card, CardHeader, CardContent, Spinner } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Input, Textarea } from '../components/ui/input';
-import { Info, Smartphone, Building, Code2, Save, KeyRound } from 'lucide-react';
+import Link from 'next/link';
+import { Info, Smartphone, Building, Code2, Save, KeyRound, Database, Download } from 'lucide-react';
 import { useToast } from '../components/ui/toast';
 import api from '../lib';
 
@@ -18,6 +19,45 @@ export default function SettingsPage() {
     confirmPassword: '',
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
+
+  const handleExportBackup = async () => {
+    try {
+      setBackupLoading(true);
+      toast({
+        title: 'جارٍ التصدير...',
+        description: 'يتم الآن تجميع بيانات الجيم لإنشاء النسخة الاحتياطية',
+      });
+
+      const data = await api.get<any>('/snapshots/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json;charset=utf-8',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `powergym-backup-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'تم التنزيل بنجاح',
+        description: 'تم تحميل ملف النسخة الاحتياطية على جهازك بنجاح',
+        variant: 'success',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'خطأ',
+        description: err.message || 'فشل في سحب النسخة الاحتياطية',
+        variant: 'destructive',
+      });
+    } finally {
+      setBackupLoading(false);
+    }
+  };
 
   const handleSave = () => {
     toast({
@@ -229,6 +269,46 @@ export default function SettingsPage() {
                   className="bg-[#09090B] border-[#27272A] font-mono" 
                   disabled
                 />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Database Backup */}
+        <Card className="border-[#27272A] bg-[#18181B]">
+          <CardHeader className="border-b border-[#27272A] p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#F97316]/10 rounded-lg">
+                <Database className="w-5 h-5 text-[#F97316]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">النسخ الاحتياطي وتأمين البيانات</h3>
+                <p className="text-sm text-zinc-400">حفظ نسخة كاملة من بيانات الجيم على جهازك أو استعادتها</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-white">تصدير قاعدة البيانات بالكامل (JSON)</p>
+                <p className="text-xs text-zinc-400">
+                  تحميل ملف كامل يحتوي على جميع الأعضاء والاشتراكات والمدفوعات والمبيعات بتنسيق JSON.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleExportBackup}
+                  disabled={backupLoading}
+                  className="bg-[#F97316] hover:bg-[#EA580C] text-white gap-2"
+                >
+                  <Download className={`w-4 h-4 ${backupLoading ? 'animate-bounce' : ''}`} />
+                  {backupLoading ? 'جارٍ التصدير...' : 'تحميل نسخة احتياطية'}
+                </Button>
+                <Link href="/snapshots">
+                  <Button variant="outline" className="border-[#27272A] text-zinc-300 hover:text-white">
+                    إدارة نقاط الاستعادة
+                  </Button>
+                </Link>
               </div>
             </div>
           </CardContent>

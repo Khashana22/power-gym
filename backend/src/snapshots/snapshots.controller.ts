@@ -1,6 +1,15 @@
 import {
-  Controller, Get, Post, Delete, Param, Body,
-  Res, UseGuards, Req, HttpException, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Res,
+  UseGuards,
+  Req,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { SnapshotsService } from './snapshots.service';
@@ -24,35 +33,38 @@ export class SnapshotsController {
     return { snapshots: this.snapshotsService.listSnapshots() };
   }
 
+  @Get('summary')
+  async getSummary(@Req() req: AuthenticatedRequest) {
+    return this.snapshotsService.getDatabaseSummary(req.user.gymId);
+  }
+
+  @Get('export')
+  async exportBackup(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    const backup = await this.snapshotsService.exportData(req.user.gymId);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileName = `powergym-backup-${dateStr}.json`;
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    return res.send(JSON.stringify(backup, null, 2));
+  }
+
   @Post()
-  async create(@Body() body: { label?: string }) {
-    const snapshot = await this.snapshotsService.createSnapshot(body.label);
-    if (!snapshot) {
-      throw new HttpException('Snapshot creation failed. Make sure pg_dump is available.', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    return snapshot;
+  async create(@Req() req: AuthenticatedRequest, @Body() body: { label?: string }) {
+    return this.snapshotsService.createSnapshot(req.user.gymId, body.label);
   }
 
   @Get(':fileName/download')
   async download(@Param('fileName') fileName: string, @Res() res: Response) {
     const filePath = this.snapshotsService.getSnapshotPath(fileName);
     if (!filePath) {
-      return res.status(404).json({ error: 'Snapshot not found' });
+      throw new HttpException('Snapshot not found', HttpStatus.NOT_FOUND);
     }
 
-    res.setHeader('Content-Type', 'application/sql');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
-  }
-
-  @Post(':fileName/restore')
-  async restore(@Param('fileName') fileName: string) {
-    const success = await this.snapshotsService.restoreSnapshot(fileName);
-    if (!success) {
-      throw new HttpException('Restore failed', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    return { success: true, message: 'Database restored successfully' };
   }
 
   @Delete(':fileName')
