@@ -21,7 +21,11 @@ export class MembersService {
     });
 
     if (existing) {
-      throw new ConflictException('Phone number already registered');
+      if (!existing.isActive || existing.isArchived) {
+        await this.remove(existing.gymId, existing.id);
+      } else {
+        throw new ConflictException('Phone number already registered');
+      }
     }
 
     // Find the highest existing memberCode number to generate next sequential code
@@ -147,6 +151,19 @@ export class MembersService {
   async update(gymId: string, id: string, dto: UpdateMemberDto) {
     await this.findOne(gymId, id);
 
+    if (dto.phone) {
+      const existing = await this.prisma.member.findUnique({
+        where: { phone: dto.phone },
+      });
+      if (existing && existing.id !== id) {
+        if (!existing.isActive || existing.isArchived) {
+          await this.remove(existing.gymId, existing.id);
+        } else {
+          throw new ConflictException('Phone number already registered');
+        }
+      }
+    }
+
     return this.prisma.member.update({
       where: { id },
       data: dto,
@@ -156,9 +173,32 @@ export class MembersService {
   async remove(gymId: string, id: string) {
     await this.findOne(gymId, id);
 
-    return this.prisma.member.update({
-      where: { id },
-      data: { isActive: false },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.notification.deleteMany({ where: { memberId: id } });
+      await tx.attendance.deleteMany({ where: { memberId: id } });
+      await tx.memberFreeze.deleteMany({ where: { memberId: id } });
+
+      const subs = await tx.subscription.findMany({
+        where: { memberId: id },
+        select: { id: true },
+      });
+      const subIds = subs.map((s) => s.id);
+
+      if (subIds.length > 0) {
+        await tx.payment.deleteMany({
+          where: { subscriptionId: { in: subIds } },
+        });
+        await tx.memberFreeze.deleteMany({
+          where: { subscriptionId: { in: subIds } },
+        });
+        await tx.subscription.deleteMany({
+          where: { id: { in: subIds } },
+        });
+      }
+
+      return tx.member.delete({
+        where: { id },
+      });
     });
   }
 }
